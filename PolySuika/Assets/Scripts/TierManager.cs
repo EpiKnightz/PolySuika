@@ -8,6 +8,9 @@ using FirstGearGames.SmoothCameraShaker;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using Random = UnityEngine.Random;
+using Utilities;
+
+
 public class TierManager : BaseSingleton<TierManager>
 {
     public GameObject[] TierPrefabs;
@@ -31,13 +34,13 @@ public class TierManager : BaseSingleton<TierManager>
     private Transform cachedTransform;
     private int chosenTier = -1;
 
-    public TextMeshPro ScoreText;
-    private int Score = 0;
+    private event IntEvent EUIEvents;
+
 
     // FX
     public GameObject MergeVFXPrefab;
     public AudioClip MergeSFX;
-    public ShakeData MergeCamFX;
+    public ShakeData[] MergeCamFX;
     private ChromaticAberration chromaticAberration;
 
     private void Start()
@@ -48,6 +51,16 @@ public class TierManager : BaseSingleton<TierManager>
         if (profile != null)
         {
             profile.TryGet(out chromaticAberration);
+        }
+        UIScoreText scoreText = FindAnyObjectByType<UIScoreText>();
+        if (scoreText != null)
+        {
+            EUIEvents += scoreText.UpdateScoreWhenMerge;
+        }
+        ScoreManager scoreManager = FindAnyObjectByType<ScoreManager>();
+        if (scoreManager != null)
+        {
+            EUIEvents += scoreManager.OnMergeEvent;
         }
     }
 
@@ -74,7 +87,7 @@ public class TierManager : BaseSingleton<TierManager>
             }
             clone.GetComponent<Collider>().enabled = false;
             clone.GetComponent<Rigidbody>().isKinematic = true;
-            clone.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            clone.GetComponent<MeshRenderer>().shadowCastingMode = ShadowCastingMode.Off;
             clone.SetActive(true);
         }
     }
@@ -132,11 +145,11 @@ public class TierManager : BaseSingleton<TierManager>
         NewObject.GetComponent<Rigidbody>().mass = 1 + (Tier * massIncrement);
         Mergable NewMergable = NewObject.GetComponent<Mergable>();
         NewMergable.SetTier(Tier);
-        NewMergable.OnMergeTrigger += IncreaseMergeCount;
-        NewMergable.OnMergeTrigger += OnMergeEvent;
-        NewMergable.OnMergeTrigger += CameraShakeFX;
-        NewMergable.OnMergePosition += SpawnVFX;
-        NewMergable.OnMergePosition += PlaySFX;
+        NewMergable.EOnMergeTrigger += IncreaseMergeCount;
+        NewMergable.EOnMergeTrigger += OnMergeEvent;
+        NewMergable.EOnMergeTrigger += CameraShakeFX;
+        NewMergable.EOnMergePosition += SpawnVFX;
+        NewMergable.EOnMergePosition += PlaySFX;
         if (popup)
         {
             PoppingUp(NewObject, Tier);
@@ -156,15 +169,22 @@ public class TierManager : BaseSingleton<TierManager>
 
     public void OnMergeEvent(int Tier)
     {
-        Score += (int)Mathf.Pow(2, Tier + 1);
-        ScoreText.text = "Score: " + Score.ToString();
+        EUIEvents?.Invoke(Tier);
     }
 
     public void CameraShakeFX(int Tier)
     {
         // Might increase the shake intensity based on Tier?
         float intensity = 0.3f + 0.1f * Tier;
-        CameraShakerHandler.Shake(MergeCamFX);
+        int shakeIntensityIdx = 0;
+        if (MergeCamFX.Length > 0)
+        {
+            if (MergeCamFX.Length == 3)
+            {
+                shakeIntensityIdx = Tier < GConst.TIER_RANK_1 ? 0 : Tier < GConst.TIER_RANK_2 ? 1 : 2;
+            }
+            CameraShakerHandler.Shake(MergeCamFX[shakeIntensityIdx]);
+        }
         if (chromaticAberration != null)
         {
             Tween.Custom(0f, intensity, 0.125f, cycles: 2, cycleMode: CycleMode.Rewind, ease: Ease.InOutSine, onValueChange: newVal => {
@@ -197,11 +217,12 @@ public class TierManager : BaseSingleton<TierManager>
         Object.transform.localScale = new Vector3(0.01f, 0.01f, 0.01f);
         // Use tween to ramp up the scale of the object to their tier size
         Tween.Scale(Object.transform,
-            (1 + Tier * scaleIncrement),
-            (1 + Tier * timeIncrement),
-            ease: Ease.OutBack);
+            (1f + Tier * scaleIncrement),
+            (0.75f + Tier * timeIncrement),
+            ease: Ease.OutCirc);
     }
 
+    // Show reference of all tiers at the top of the screen
     private void SpawnReferences()
     {
         float minX = -1.5f;
