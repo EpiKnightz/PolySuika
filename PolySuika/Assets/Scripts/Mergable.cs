@@ -7,8 +7,8 @@ public class Mergable : MonoBehaviour
     private int Tier = 0;
     private bool isMerging = false;
 
-    public event IntEvent OnMergeTrigger;
-    public event Vector3Event OnMergePosition;
+    public event IntEvent EOnMergeTrigger;
+    public event Vector3Event EOnMergePosition;
 
     private void OnCollisionEnter(Collision collision)
     {
@@ -30,8 +30,8 @@ public class Mergable : MonoBehaviour
             Vector3 mergePosition = (otherMergable.transform.position + transform.position) / 2;
             GameObject NewObject = TierManager.instance.SpawnAdvance(Tier + 1,
                 mergePosition);
-            OnMergeTrigger?.Invoke(Tier);
-            OnMergePosition?.Invoke(mergePosition);
+            EOnMergeTrigger?.Invoke(Tier);
+            EOnMergePosition?.Invoke(mergePosition);
             //,Quaternion.Lerp(otherMergable.transform.rotation,transform.rotation, 0.5f));
             //Mergable NewMergable = NewObject.GetComponent<Mergable>();
 
