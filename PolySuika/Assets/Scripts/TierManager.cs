@@ -34,7 +34,7 @@ public class TierManager : BaseSingleton<TierManager>
     private Transform cachedTransform;
     private int chosenTier = -1;
 
-    private event IntEvent EUIEvents;
+    private event IntEvent EMergeTierEvent;
 
 
     // FX
@@ -53,15 +53,10 @@ public class TierManager : BaseSingleton<TierManager>
         {
             profile.TryGet(out chromaticAberration);
         }
-        UIScoreText scoreText = FindAnyObjectByType<UIScoreText>();
-        if (scoreText != null)
-        {
-            EUIEvents += scoreText.UpdateScoreWhenMerge;
-        }
         ScoreManager scoreManager = FindAnyObjectByType<ScoreManager>();
         if (scoreManager != null)
         {
-            EUIEvents += scoreManager.OnMergeEvent;
+            EMergeTierEvent += scoreManager.OnMergeEvent;
         }
     }
 
@@ -170,7 +165,7 @@ public class TierManager : BaseSingleton<TierManager>
 
     public void OnMergeEvent(int Tier)
     {
-        EUIEvents?.Invoke(Tier);
+        EMergeTierEvent?.Invoke(Tier);
     }
 
     public void CameraShakeFX(int Tier)

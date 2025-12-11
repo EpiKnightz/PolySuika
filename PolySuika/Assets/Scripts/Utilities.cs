@@ -4,6 +4,7 @@ namespace Utilities
 {
     public delegate void VoidEvent();
     public delegate void IntEvent(int value);
+    public delegate void Int2Event(int value1, int value2);
     public delegate void BoolEvent(bool value);
     public delegate void FloatEvent(float value);
     public delegate void DoubleEvent(double value);
@@ -17,9 +18,9 @@ namespace Utilities
     }
 
     //TO-DO: Day3
-    // Add VFX
-    // Add SFX
-    // Add Camera Shake
+    // v Add VFX
+    // v Add SFX
+    // v Add Camera Shake
 
     //TO-DO: Day4
     // Add Menus
@@ -28,7 +29,8 @@ namespace Utilities
     // + Score Manager
 
     //TO-DO: Day5
-    // Multiplier apply to score
+    // v Multiplier apply to score
+    // Camera scaler according to resolution
     // Add Music
-    // Add Outline effect with post processing
+    // v Add Outline effect with post processing
 }
