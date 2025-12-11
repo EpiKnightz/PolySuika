@@ -9,7 +9,7 @@ using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using Random = UnityEngine.Random;
 using Utilities;
-
+using FMODUnity;
 
 public class TierManager : BaseSingleton<TierManager>
 {
@@ -39,7 +39,8 @@ public class TierManager : BaseSingleton<TierManager>
 
     // FX
     public GameObject MergeVFXPrefab;
-    public AudioClip MergeSFX;
+    //public AudioClip MergeSFX;
+    public EventReference MergeSFX;
     public ShakeData[] MergeCamFX;
     private ChromaticAberration chromaticAberration;
 
@@ -206,10 +207,7 @@ public class TierManager : BaseSingleton<TierManager>
 
     public void PlaySFX(Vector3 position)
     {
-        if (MergeSFX != null)
-        {
-            AudioSource.PlayClipAtPoint(MergeSFX, position);
-        }
+        RuntimeManager.PlayOneShot(MergeSFX, position);
     }
 
     public void PoppingUp(GameObject Object, int Tier)
