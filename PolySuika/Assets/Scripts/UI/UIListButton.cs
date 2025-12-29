@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class UIListButton : UIToggle
 {
-    [BetterHeader("References")]
+    [Header("References")]
     public RectTransform ListButton;
     public RectTransform RestartButton;
     public RectTransform HomeButton;
@@ -37,8 +37,8 @@ public class UIListButton : UIToggle
 
     private void OnDisable()
     {
-        ECHomeButtonTriggered.UnSub(HideList);
-        ECRestartButtonTriggered.UnSub(HideList);
+        ECHomeButtonTriggered.Unsub(HideList);
+        ECRestartButtonTriggered.Unsub(HideList);
         ECOnFinalScore.Unsub(OnFinalScore);
     }
 

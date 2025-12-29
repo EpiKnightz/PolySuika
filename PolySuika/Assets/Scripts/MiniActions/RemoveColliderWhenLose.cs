@@ -1,21 +1,26 @@
+using Sortify;
 using UnityEngine;
 
 public class RemoveColliderWhenLose : MonoBehaviour
 {
-    public Collider targetCollider;
+    [Header("References")]
+    [SerializeField] private Collider TargetCollider;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    [BetterHeader("Listen To")]
+    public VoidEventChannelSO ECOnLoseTrigger;    
+
+    private void OnEnable()
     {
-        var check = FindAnyObjectByType<CheckFull>();
-        if (check != null)
-        {
-            check.EOnLoseTrigger += OnLoseTrigger;
-        }
+        ECOnLoseTrigger.Sub(OnLoseTrigger);
+    }
+
+    private void OnDisable()
+    {
+        ECOnLoseTrigger.Unsub(OnLoseTrigger);
     }
 
     void OnLoseTrigger()
     {
-        targetCollider.enabled = false;
+        TargetCollider.enabled = false;
     }
 }

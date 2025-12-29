@@ -1,17 +1,22 @@
 using PrimeTween;
+using Sortify;
 using System.Collections.Generic;
 using UnityEngine;
 using Utilities;
 
 public class CheckFull : MonoBehaviour
 {
-    public LayerMask MergableLayerMask;
-    public float maxCountdown = 3f;
-    public MeshRenderer warningMesh;
+    [Header("References")]
+    [SerializeField] private MeshRenderer warningMesh;
 
-    public event VoidEvent EOnLoseTrigger;
+    [BetterHeader("Variables")]
+    [SerializeField] private LayerMask MergableLayerMask;
+    [SerializeField] private float maxCountdown = 5f;
 
-    [Header("Listen To")]
+    [BetterHeader("Broadcast On")]
+    public VoidEventChannelSO ECOnLoseTrigger;
+
+    [BetterHeader("Listen To")]
     public VoidEventChannelSO ECOnRestartTriggered;
 
     private Material warningMaterial;
@@ -32,7 +37,7 @@ public class CheckFull : MonoBehaviour
 
     private void OnDisable()
     {
-        ECOnRestartTriggered.UnSub(ResetCountdown);
+        ECOnRestartTriggered.Unsub(ResetCountdown);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -120,7 +125,7 @@ public class CheckFull : MonoBehaviour
                 // Double check one final time
                 if (RayCheck())
                 {
-                    EOnLoseTrigger?.Invoke();
+                    ECOnLoseTrigger.Invoke();
                     bIsCountdown = false;
                 }
             }

@@ -1,14 +1,17 @@
 using UnityEngine;
 using UnityEngine.UI;
 using FMODUnity;
+using Sortify;
 
 public class UIFModBusToggle : UIToggle
 {
-    public Sprite EnableToggle;
-    public Sprite DisableToggle;
-    public Image TargetImage;
+    [Header("References")]
+    [SerializeField] private Sprite EnableToggle;
+    [SerializeField] private Sprite DisableToggle;
+    [SerializeField] private Image TargetImage;
 
-    public string busName;
+    [BetterHeader("Variables")]
+    [SerializeField] private string BusName;
 
     public override void DisableVisual()
     {
@@ -30,9 +33,6 @@ public class UIFModBusToggle : UIToggle
 
     public override void ToggleAction(bool enable) 
     {
-        //RuntimeManager.MuteAllEvents(!enable);
-        RuntimeManager.GetBus(busName).setMute(!enable);
+        RuntimeManager.GetBus(BusName).setMute(!enable);
     }
-
-    
 }

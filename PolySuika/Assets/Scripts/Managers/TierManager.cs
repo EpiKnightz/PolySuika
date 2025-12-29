@@ -1,6 +1,6 @@
 using FirstGearGames.SmoothCameraShaker;
 using FMODUnity;
-using Lean.Common;
+using System;
 using Lean.Pool;
 using PrimeTween;
 using Solo.MOST_IN_ONE;
@@ -13,9 +13,13 @@ using UnityEngine.Rendering.Universal;
 using Utilities;
 using WanzyeeStudio;
 using Random = UnityEngine.Random;
+using Reflex.Attributes;
 
 public class TierManager : BaseSingleton<TierManager>
-{ 
+{
+    // Dependencies
+    [Inject] private readonly IDataManager DataManager;
+
     [BetterHeader("Spawn Settings")]
     public int MaxSpawnableTier = 2;
     public int TierUpMergeCount = 5;
@@ -41,17 +45,18 @@ public class TierManager : BaseSingleton<TierManager>
     public float PopUpStartScale = 0.001f;
     private ChromaticAberration chromaticAberration;
 
+    [BetterHeader("Broadcast On")]
+    public IntEventChannelSO ECOnMergeEvent = null;
+
     [BetterHeader("Listen To")]
     public VoidEventChannelSO ECActionButtonTriggered;
-    public VoidEventChannelSO ECOnRestartTriggered;
+    public VoidEventChannelSO ECOnRestartTriggered = null;
     public IntEventChannelSO ECOnSetChange;
+    public VoidEventChannelSO ECOnLoseTrigger;
 
     // Events
-    private event IntEvent EMergeTierEvent;
-    private GetFloatEvent DGetCurrentBaseScale;
-    private GetFloatEvent DGetCurrentScaleIncrement;
-    private GetObjectsEvent DGetCurrentTierPrefabs;
-    private VoidEvent DTriggerRestartManually;
+    //private event Action<int> EMergeTierEvent;
+    //private Action DTriggerRestartManually;
 
     // Privates
     private float lastSpawnTime = 0;
@@ -71,36 +76,10 @@ public class TierManager : BaseSingleton<TierManager>
 
     private void Start()
     {        
-        DataManager dataMan = FindAnyObjectByType<DataManager>();
-        if (dataMan != null)
-        {
-            DGetCurrentTierPrefabs += dataMan.GetCurrentTierPrefabs;
-            DGetCurrentBaseScale += dataMan.GetCurrentBaseScale;
-            DGetCurrentScaleIncrement += dataMan.GetCurrentScaleIncrement;
-        } else
-        {           
-            print("TierManager: DataManager not found in scene!");
-            return;
-        }
         var profile = GameObject.Find("Post Processing").GetComponent<Volume>().profile;
         if (profile != null)
         {
             profile.TryGet(out chromaticAberration);
-        }
-        var scoreManager = FindAnyObjectByType<ScoreManager>();
-        if (scoreManager != null)
-        {
-            EMergeTierEvent += scoreManager.OnMergeEvent;
-        }
-        var uIRestartButton = FindAnyObjectByType<UIRestartButton>();
-        if (uIRestartButton != null)
-        {
-            DTriggerRestartManually += uIRestartButton.OnClick;
-        }
-        var checkFull = FindAnyObjectByType<CheckFull>();
-        if (checkFull != null)
-        {
-            checkFull.EOnLoseTrigger += OnGameEnd;
         }
     }
 
@@ -109,13 +88,15 @@ public class TierManager : BaseSingleton<TierManager>
         ECActionButtonTriggered.Sub(OnActionTriggered);
         ECOnSetChange.Sub(OnCurrentSetChanged);
         ECOnRestartTriggered.Sub(ClearBoard);
+        ECOnLoseTrigger.Sub(OnGameEnd);
     }
 
     private void OnDisable()
     {
-        ECActionButtonTriggered.UnSub(OnActionTriggered);
+        ECActionButtonTriggered.Unsub(OnActionTriggered);
         ECOnSetChange.Unsub(OnCurrentSetChanged);
-        ECOnRestartTriggered.UnSub(ClearBoard);
+        ECOnRestartTriggered.Unsub(ClearBoard);
+        ECOnLoseTrigger.Unsub(OnGameEnd);
     }
 
     public void OnCurrentSetChanged(int newIdx)
@@ -125,7 +106,8 @@ public class TierManager : BaseSingleton<TierManager>
             // Send Restart event
             bIsLevelDirty = true;
             ReturnTierRefs();
-            DTriggerRestartManually?.Invoke();       
+            // Manually trigger restart to clear the board
+            ECOnRestartTriggered.Invoke();
         }
     }
 
@@ -142,9 +124,9 @@ public class TierManager : BaseSingleton<TierManager>
 
     public void UpdateTierPrefabs()
     {
-        TierPrefabs = DGetCurrentTierPrefabs?.Invoke();
-        baseScale = DGetCurrentBaseScale.Invoke();
-        scaleIncrement = DGetCurrentScaleIncrement.Invoke();
+        TierPrefabs = DataManager.GetCurrentTierPrefabs();
+        baseScale = DataManager.GetCurrentBaseScale();
+        scaleIncrement = DataManager.GetCurrentScaleIncrement();
     }
 
     public int GetMaxTier()
@@ -277,7 +259,7 @@ public class TierManager : BaseSingleton<TierManager>
 
     public void OnMergeEvent(int Tier)
     {
-        EMergeTierEvent?.Invoke(Tier);
+        ECOnMergeEvent.Invoke(Tier);
     }
 
     public void ResetTier()
@@ -290,6 +272,7 @@ public class TierManager : BaseSingleton<TierManager>
         bIsGameEnd = false;
     }
 
+    // TO-DO: Move this to different scripts and use event system
     public void CameraShakeFX(int Tier)
     {
         // Might increase the shake intensity based on Tier?

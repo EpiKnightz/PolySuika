@@ -2,12 +2,16 @@ using PrimeTween;
 using Sortify;
 using TMPro;
 using UnityEngine;
-using Utilities;
+using System;
+using Reflex.Attributes;
 
 [RequireComponent(typeof(RectTransform))]
 public class UISaveScoreButton : MonoBehaviour
 {
-    [BetterHeader("References")]
+    // Dependencies
+    [Inject] readonly ILeaderboardManager LeaderboardManager;
+
+    [Header("References")]
     [SerializeField] private TMP_InputField UITextInput;
     [SerializeField] private RectTransform ThisRectTransform;
 
@@ -16,24 +20,16 @@ public class UISaveScoreButton : MonoBehaviour
     [SerializeField] private float HighlightDuration = 1f;
     [SerializeField] private float StartAnimationY = -105f;
 
-    [Header("Listen To")]
+    [BetterHeader("Listen To")]
     public VoidEventChannelSO ECOnRestartTriggered;
     public IntEventChannelSO ECOnFinalScore;
     //
     private int FinalScore;
 
-    // Events
-    private EntryEvent DAddNewLeaderboardEntry;
-
     private void Start()
     {
         gameObject.SetActive(false);
         UITextInput.gameObject.SetActive(false);        
-        var leaderboardManager = FindAnyObjectByType<LeaderboardManager>();
-        if (leaderboardManager != null)
-        {
-            DAddNewLeaderboardEntry += leaderboardManager.OnNewEntryAdded;
-        }
     }
 
     private void Awake()
@@ -44,7 +40,7 @@ public class UISaveScoreButton : MonoBehaviour
 
     private void OnDestroy()
     {
-        ECOnRestartTriggered.UnSub(ResetSaveScore);
+        ECOnRestartTriggered.Unsub(ResetSaveScore);
         ECOnFinalScore.Unsub(OnFinalScore);
     }
 
@@ -84,7 +80,7 @@ public class UISaveScoreButton : MonoBehaviour
             ResetSaveScore();
             // Add new Entry
             Entry newEntry = new(name, FinalScore);
-            DAddNewLeaderboardEntry?.Invoke(newEntry);
+            LeaderboardManager.AddLeaderboardEntry(newEntry);
             UIManager.instance.SwitchActivePanel(UIManager.PanelType.Leaderboard, true);
             FinalScore = 0;
         }else

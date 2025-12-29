@@ -1,3 +1,4 @@
+using Sortify;
 using TMPro;
 using UnityEngine;
 using WanzyeeStudio;
@@ -9,24 +10,18 @@ public class UIEndGameText : MonoBehaviour
 
     [Header("Listen To")]
     public VoidEventChannelSO ECOnRestartTriggered;
-
-    void Start()
-    {
-        var checkFull = FindAnyObjectByType<CheckFull>();
-        if (checkFull != null)
-        {
-            checkFull.EOnLoseTrigger += Lose;
-        }
-    }
+    public VoidEventChannelSO ECOnLoseTrigger;
 
     private void OnEnable()
     {
         ECOnRestartTriggered.Sub(ResetText);
+        ECOnLoseTrigger.Sub(Lose);
     }
 
     private void OnDisable()
     {
-        ECOnRestartTriggered.UnSub(ResetText);
+        ECOnRestartTriggered.Unsub(ResetText);
+        ECOnLoseTrigger.Unsub(Lose);
     }
 
     private void Win()

@@ -1,6 +1,6 @@
 using PrimeTween;
 using UnityEngine;
-using Utilities;
+using System;
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(Collider))]
@@ -11,11 +11,11 @@ public class Mergable : MonoBehaviour
     private bool isMerging = false;
     private bool isImpacted = false;
 
-    public event IntEvent EOnMergeTrigger;
-    public event Vector3Event EOnMergePosition;
-    public event System.Action<Mergable> EOnImpact;
-    public event System.Action<Mergable> EOnMerging;
-    public event System.Action<Mergable> EOnDisable;
+    public event Action<int> EOnMergeTrigger;
+    public event Action<Vector3> EOnMergePosition;
+    public event Action<Mergable> EOnImpact;
+    public event Action<Mergable> EOnMerging;
+    public event Action<Mergable> EOnDisable;
 
     private void OnCollisionEnter(Collision collision)
     {
@@ -36,7 +36,6 @@ public class Mergable : MonoBehaviour
             SetIsMerging(true);
             otherMergable.SetIsMerging(true);
             otherMergable.GetComponent<Collider>().enabled = false;
-            //otherMergable.enabled = false;
             GetComponent<Collider>().enabled = false;
             Vector3 mergePosition = (otherMergable.transform.position + transform.position) / 2;
             TierManager.instance.SpawnAdvance(Tier + 1, mergePosition);

@@ -1,2 +1,14 @@
 fileFormatVersion: 2
 guid: 3c63e46a3eeec28459f7e724d9f1a4d5
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - ScoreText: {instanceID: 0}
+  - ECOnScoreTotalChange: {fileID: 11400000, guid: 638af0907da29bc449654934a88bb2af, type: 2}
+  - ECOnCurrentScorePreTotal: {fileID: 11400000, guid: 719dbcad42df4c94398d13dad139c4b5, type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

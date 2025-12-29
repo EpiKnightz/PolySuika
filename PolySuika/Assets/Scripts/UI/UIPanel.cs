@@ -6,16 +6,13 @@ using static UIManager;
 [RequireComponent(typeof(RectTransform))]
 public class UIPanel : MonoBehaviour
 {
-    public RectTransform PanelTransform;
-    public float CameraPos;
-    public PanelType MenuPanelType;
+    [SerializeField] private RectTransform PanelTransform;
+    [SerializeField] private PanelType MenuPanelType;
+    [SerializeField] private float CameraPos;
 
     [BetterHeader("Broadcast On")]
     public VoidEventChannelSO ECOnClickTriggered = null;
     public VoidEventChannelSO ECOnChangePanelAnimFinished = null;
-
-    // Privates
-    private float OriginalHeight;
 
     private void Awake()
     {
@@ -23,14 +20,6 @@ public class UIPanel : MonoBehaviour
         {
             PanelTransform = GetComponent<RectTransform>();
         }
-        OriginalHeight = PanelTransform.rect.height;
-    }
-
-    public UIPanel(RectTransform panelTransform, float cameraPos, PanelType type)
-    {
-        PanelTransform = panelTransform;
-        CameraPos = cameraPos;
-        MenuPanelType = type;
     }
 
     public void OnClick()
@@ -61,5 +50,10 @@ public class UIPanel : MonoBehaviour
     public void EnablePanel(bool enabled = true)
     {
         PanelTransform.gameObject.SetActive(enabled);
+    }
+
+    public float GetCameraPos()
+    {
+        return CameraPos;
     }
 }

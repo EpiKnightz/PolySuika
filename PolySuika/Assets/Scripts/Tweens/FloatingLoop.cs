@@ -1,8 +1,10 @@
 using PrimeTween;
+using Sortify;
 using UnityEngine;
 
 public class FloatingLoop : MonoBehaviour
 {
+    [BetterHeader("Variables")]
     public float floatEndpoint = 200;
     public float floatDuration = 2f;
     public float floatStartDelay = 0f;

@@ -1,14 +1,17 @@
+using Sortify;
 using UnityEngine;
 
 [ExecuteInEditMode]
 [RequireComponent (typeof(Camera))]
 public class CameraUtilities : MonoBehaviour
 {
-    [Header("Broadcast On")]
+    [BetterHeader("Variables")]
+    [SerializeField] private float target_fov = 14.25f;
+
+    [BetterHeader("Broadcast On")]
     public IntEventChannelSO ECResolutionChange = null;
 
-    public float target_fov = 14.25f;
-
+    // Privates
     private int current_h = 2400;
     private int BaseWidth = 1080;
 

@@ -23,6 +23,5 @@ public class MusicManager : MonoBehaviour
     void OnSetChange(int newIndex)
     {
         EventEmitter.SetParameter("Track", newIndex);
-
     }
 }

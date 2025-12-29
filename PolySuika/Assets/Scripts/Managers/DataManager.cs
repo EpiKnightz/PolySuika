@@ -1,16 +1,37 @@
+using Reflex.Core;
+using Sortify;
 using UnityEngine;
-using Utilities;
 
-public class DataManager : MonoBehaviour
+public class DataManager : MonoBehaviour, IInstaller, IDataManager
 {
-    public LevelSet[] LevelSets;
+    [Header("Variables")]
+    [SerializeField] private LevelSet[] LevelSets;
 
-    [Header("Broadcast On")]
+    [BetterHeader("Broadcast On")]
     public IntEventChannelSO ECOnSetChange = null;
     public IntEventChannelSO ECOnCurrentLevelSetChangedOffset = null;
 
+    [BetterHeader("Listen To")]
+    public IntEventChannelSO ECOnChangeSetOffsetTriggered;
+
     // Private
     private int CurrentLevelSetIndex = 0;
+
+    public void InstallBindings(ContainerBuilder builder)
+    {
+        Debug.Log("Installing DataManager Bindings");
+        builder.AddSingleton(this, typeof(IDataManager));
+    }
+
+    void OnEnable()
+    {
+        ECOnChangeSetOffsetTriggered.Sub(OffsetCurrentLevelSet);
+    }
+
+    void OnDisable()
+    {
+        ECOnChangeSetOffsetTriggered.Unsub(OffsetCurrentLevelSet);
+    }
 
     public GameObject[] GetCurrentTierPrefabs()
     {
@@ -35,7 +56,7 @@ public class DataManager : MonoBehaviour
     public void OffsetCurrentLevelSet(int offset)
     {
         CurrentLevelSetIndex += offset;
-        if (CurrentLevelSetIndex >= LevelSets.Length) 
+        if (CurrentLevelSetIndex >= LevelSets.Length)
         {
             CurrentLevelSetIndex = 0;
         }
@@ -43,9 +64,8 @@ public class DataManager : MonoBehaviour
         {
             CurrentLevelSetIndex = LevelSets.Length - 1;
         }
-        //EOnCurrentLevelSetChanged?.Invoke(CurrentLevelSetIndex);
-        ECOnSetChange?.Invoke(CurrentLevelSetIndex);
-        ECOnCurrentLevelSetChangedOffset?.Invoke(offset);
+        ECOnSetChange.Invoke(CurrentLevelSetIndex);
+        ECOnCurrentLevelSetChangedOffset.Invoke(offset);
     }
 
     public GameObject GetCurrentShopBG()

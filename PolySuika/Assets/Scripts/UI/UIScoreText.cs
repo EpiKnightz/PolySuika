@@ -6,8 +6,8 @@ using Utilities;
 
 public class UIScoreText : MonoBehaviour
 {
+    [Header("References")]
     public TextMeshPro ScoreText;
-    public Color[] FlavorTextColors;
 
     [BetterHeader("Listen To")]
     public IntEventChannelSO ECOnScoreTotalChange;
@@ -16,16 +16,6 @@ public class UIScoreText : MonoBehaviour
     private int OldScore = 0;
     private int NewScore = 0;
     private int NextMilestone = 0;
-
-    //void Start()
-    //{
-    //    var scoreManager = FindAnyObjectByType<ScoreManager>();
-    //    if (scoreManager != null)
-    //    {
-    //        scoreManager.EOnScoreTotalChange += UpdateTotalScore;
-    //        scoreManager.EOnCurrentScorePreCalculated += UpdateFlavorText;
-    //    }
-    //}
 
     private void OnEnable()
     {

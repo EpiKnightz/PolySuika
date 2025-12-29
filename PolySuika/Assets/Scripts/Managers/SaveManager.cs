@@ -1,43 +1,39 @@
 ﻿using System.IO;
-using System.Linq;
 using UnityEngine;
-using Utilities;
-//using JsonUtility;
+using Reflex.Core;
 
-public class SaveManager : MonoBehaviour
+public class SaveManager : MonoBehaviour, ISaveManager, IInstaller
 {
-    public bool BeautifyJson = true;
-    
+    [SerializeField] private bool BeautifyJson = true;
 
-    private void Start()
+    public void InstallBindings(ContainerBuilder builder)
     {
-        //UpdateLeaderboardFromDisk();
+        builder.AddSingleton(this, typeof(ISaveManager));
     }
 
-
-    public void SaveLeaderboard(Leaderboard leaderboard)
+    public void Save<T>(T data)
     {
-        string json = JsonUtility.ToJson(leaderboard, BeautifyJson);
-        string path = Path.Join(Application.persistentDataPath, "Leaderboard.ini");
-        StreamWriter streamWriter = new StreamWriter(path);
+        string json = JsonUtility.ToJson(data, BeautifyJson);
+        string path = Path.Join(Application.persistentDataPath, $"{typeof(T).Name}.ini");
+        var streamWriter = new StreamWriter(path);
         streamWriter.Write(json);
         streamWriter.Close();
     }
 
-    public Leaderboard GetLeaderboard()
+    public T Load<T>()
     {
-        string path = Path.Join(Application.persistentDataPath, "Leaderboard.ini");
+        string path = Path.Join(Application.persistentDataPath, $"{typeof(T).Name}.ini");
         try
         {
-            StreamReader streamReader = new StreamReader(path);
+            var streamReader = new StreamReader(path);
             string json = streamReader.ReadToEnd();
             streamReader.Close();
-            return JsonUtility.FromJson<Leaderboard>(json);
+            return JsonUtility.FromJson<T>(json);
         }
         catch (FileNotFoundException e)
         {
-            print(e);
-            return null;
+            Debug.LogError(e);
+            return default;
         }
     }
 }

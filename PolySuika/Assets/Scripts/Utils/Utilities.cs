@@ -5,16 +5,16 @@ using Color = UnityEngine.Color;
 
 namespace Utilities
 {
-    public delegate void VoidEvent();
-    public delegate void IntEvent(int value);
-    public delegate void Int2Event(int value1, int value2);
-    public delegate void BoolEvent(bool value);
-    public delegate void FloatEvent(float value);
-    public delegate void DoubleEvent(double value);
-    public delegate void Vector3Event(Vector3 value);
-    public delegate void LeaderboardEvent(Leaderboard value);
+    //public delegate void VoidEvent();
+    //public delegate void IntEvent(int value);
+    //public delegate void Int2Event(int value1, int value2);
+    //public delegate void BoolEvent(bool value);
+    //public delegate void FloatEvent(float value);
+    //public delegate void DoubleEvent(double value);
+    //public delegate void Vector3Event(Vector3 value);
+    //public delegate void LeaderboardEvent(Leaderboard value);    
+    //public delegate void EntryEvent(Entry value);
     public delegate Leaderboard GetLeaderboardEvent();
-    public delegate void EntryEvent(Entry value);
     public delegate GameObject[] GetObjectsEvent();
     public delegate GameObject GetObjectEvent();
     public delegate float GetFloatEvent();

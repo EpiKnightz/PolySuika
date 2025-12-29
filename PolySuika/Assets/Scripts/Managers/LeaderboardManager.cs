@@ -1,57 +1,70 @@
+using Reflex.Attributes;
 using UnityEngine;
-using Utilities;
+using Sortify;
+using Reflex.Core;
 
-public class LeaderboardManager : MonoBehaviour
-{
+public class LeaderboardManager : MonoBehaviour, ILeaderboardManager, IInstaller
+{    
+    // Dependencies
+    [Inject] private readonly ISaveManager SaveManager;
+
+    // Events Channels
+    [BetterHeader("Broadcast On")]
+    public LeaderboardEventChannelSO ECOnLeaderboardUpdated = null;
+
+    [BetterHeader("Listen To")]
+    public VoidEventChannelSO ECOnResetLeaderboardTriggered;
+
+    // Private
     private Leaderboard CurrentLeaderboard;
 
-    // Events
-    public event LeaderboardEvent EOnLeaderboardUpdated;
-    private LeaderboardEvent DSaveLeaderboard2Disk;
-    private GetLeaderboardEvent DGetLeaderboardFromDisk;
-
-    void Start()
+    private void Start()
     {
-        var SaveManager = FindAnyObjectByType<SaveManager>();
-        if (SaveManager != null)
-        {
-            DSaveLeaderboard2Disk += SaveManager.SaveLeaderboard;
-            DGetLeaderboardFromDisk += SaveManager.GetLeaderboard;
-        }
-        var ResetLeaderboardButton = FindAnyObjectByType<UIResetLeaderboardButton>();
-        if (ResetLeaderboardButton != null)
-        {
-            ResetLeaderboardButton.EOnResetLeaderboardTriggered += ResetLeaderboard;
-        }
+        // Temporary for now
         UpdateLeaderboardFromDisk();
     }
 
+    public void InstallBindings(ContainerBuilder builder)
+    {
+        builder.AddSingleton(this, typeof(ILeaderboardManager));
+    }
+
+    private void OnEnable()
+    {
+        ECOnResetLeaderboardTriggered.Sub(ResetLeaderboard);
+    }
+
+    private void OnDisable()
+    {
+        ECOnResetLeaderboardTriggered.Unsub(ResetLeaderboard);
+    }
 
     public void UpdateLeaderboardFromDisk()
     {
-        CurrentLeaderboard = DGetLeaderboardFromDisk?.Invoke();
+        CurrentLeaderboard = SaveManager.Load<Leaderboard>();
         if (CurrentLeaderboard != null)
         {
-            EOnLeaderboardUpdated?.Invoke(CurrentLeaderboard);
-        }else
+            ECOnLeaderboardUpdated.Invoke(CurrentLeaderboard);
+        }
+        else
         {
             CurrentLeaderboard = new Leaderboard();
-            DSaveLeaderboard2Disk?.Invoke(CurrentLeaderboard);
+            SaveManager.Save(CurrentLeaderboard);
         }
     }
 
-    public void OnNewEntryAdded(Entry entry)
+    public void AddLeaderboardEntry(Entry entry)
     {
         CurrentLeaderboard.Add(entry);
-        DSaveLeaderboard2Disk?.Invoke(CurrentLeaderboard);
-        EOnLeaderboardUpdated?.Invoke(CurrentLeaderboard);
+        SaveManager.Save(CurrentLeaderboard);
+        ECOnLeaderboardUpdated.Invoke(CurrentLeaderboard);
     }
 
     public void ResetLeaderboard()
     {
         CurrentLeaderboard.Clear();
-        DSaveLeaderboard2Disk?.Invoke(CurrentLeaderboard);
-        EOnLeaderboardUpdated?.Invoke(CurrentLeaderboard);
+        SaveManager.Save(CurrentLeaderboard);
+        ECOnLeaderboardUpdated.Invoke(CurrentLeaderboard);
     }
 
     public Leaderboard GetCurrentLeaderboard() { return CurrentLeaderboard; }

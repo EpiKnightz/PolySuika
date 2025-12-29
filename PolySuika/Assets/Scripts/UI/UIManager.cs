@@ -1,4 +1,5 @@
 using PrimeTween;
+using Sortify;
 using UnityEngine;
 using UnityEngine.Events;
 using WanzyeeStudio;
@@ -7,12 +8,12 @@ using WanzyeeStudio;
 // Scaling of world space UI based on resolution
 public class UIManager : BaseSingleton<UIManager>
 {
+    [Header("References")]
     public UIPanel[] PanelArray;   
     public Transform Camera;
-    public float AnimDuration = 3f;
 
-    //[Header("Listen To")]
-    //public IntEventChannelSO ECResolutionChange;
+    [BetterHeader("Variables")]
+    public float AnimDuration = 3f;
 
     public UnityEvent<PanelType> EOnAnimFinished;
 
@@ -29,25 +30,6 @@ public class UIManager : BaseSingleton<UIManager>
     {
         SwitchActivePanel(PanelType.Menu);
     }
-
-    //private void OnEnable()
-    //{
-    //    ECResolutionChange.EOnEvent += OnResolutionChanged;
-    //}
-
-    //private void OnDisable()
-    //{
-    //    ECResolutionChange.EOnEvent -= OnResolutionChanged;
-    //}
-
-
-    //void OnResolutionChanged(int resolution)
-    //{
-    //    for (int i = 0; i < PanelArray.Length; i++)
-    //    {
-    //        PanelArray[i].SetRect(resolution);
-    //    }
-    //}
 
     public void SwitchActivePanel(PanelType activePanel, bool IsAnimate = false)
     {        
@@ -68,10 +50,10 @@ public class UIManager : BaseSingleton<UIManager>
                 PanelArray[i].ShowUIPanel();
                 if (IsAnimate)
                 {
-                    AnimateUI(PanelArray[i].CameraPos);
+                    AnimateUI(PanelArray[i].GetCameraPos());
                 }else
                 {
-                    Camera.SetPositionAndRotation(new Vector3(Camera.position.x, PanelArray[i].CameraPos, Camera.position.z), Camera.rotation);
+                    Camera.SetPositionAndRotation(new Vector3(Camera.position.x, PanelArray[i].GetCameraPos(), Camera.position.z), Camera.rotation);
                 }
             }
             else

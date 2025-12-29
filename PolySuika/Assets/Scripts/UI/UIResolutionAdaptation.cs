@@ -2,7 +2,7 @@ using UnityEngine;
 using Sortify;
 
 [RequireComponent(typeof(RectTransform))]
-public class ResolutionAdaptation : MonoBehaviour
+public class UIResolutionAdaptation : MonoBehaviour
 {
     public RectTransform TargetTransform;
     public float AdaptPercentage = 0.5f;

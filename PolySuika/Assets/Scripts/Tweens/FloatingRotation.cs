@@ -1,7 +1,9 @@
-using UnityEngine;
 using PrimeTween;
+using Sortify;
+using UnityEngine;
 public class FloatingRotation : MonoBehaviour
 {
+    [BetterHeader("Variables")]
     public float floatEndpoint = 30;
     public float floatDuration = 2f;
     public float floatStartDelay = 0f;

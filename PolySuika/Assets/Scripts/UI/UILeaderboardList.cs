@@ -1,21 +1,26 @@
 using FirstGearGames.Utilities.Objects;
+using Sortify;
 using UnityEngine;
 
 public class UILeaderboardList : MonoBehaviour
 {
-    // Static Linking
+    [Header("References")]
     public RectTransform ListParent;
 
-    // Variables
+    [BetterHeader("Variables")]
     public GameObject EntryPrefab;
+
+    [BetterHeader("Listen To")]
+    public LeaderboardEventChannelSO ECOnLeaderboardUpdated;    
 
     private void Awake()
     {
-        var leaderboardManager = FindAnyObjectByType<LeaderboardManager>();
-        if (leaderboardManager != null)
-        {
-            leaderboardManager.EOnLeaderboardUpdated += OnLeaderboardUpdated;
-        }
+        ECOnLeaderboardUpdated.Sub(OnLeaderboardUpdated);
+    }
+
+    private void OnDestroy()
+    {
+        ECOnLeaderboardUpdated.Unsub(OnLeaderboardUpdated);
     }
 
     public void OnLeaderboardUpdated(Leaderboard leaderboard)

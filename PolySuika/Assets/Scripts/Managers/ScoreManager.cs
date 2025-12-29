@@ -15,7 +15,9 @@ public class ScoreManager : MonoBehaviour
     public IntEventChannelSO ECOnFinalScore = null;
 
     [BetterHeader("Listen To")]
+    public IntEventChannelSO ECOnMergeEvent;
     public VoidEventChannelSO ECOnRestartTriggered;
+    public VoidEventChannelSO ECOnLoseTrigger;
 
     private int TotalScore = 0;
     private int CurrentScore = 0;
@@ -25,23 +27,18 @@ public class ScoreManager : MonoBehaviour
     private float CurrentComboTime = 0f;
     private bool bIsFinalCombo = false;
 
-    private void Start()
-    {
-        var checkFull = FindAnyObjectByType<CheckFull>();
-        if (checkFull != null)
-        {
-            checkFull.EOnLoseTrigger += OnEndGame;
-        }
-    }
-
     private void OnEnable()
     {
+        ECOnMergeEvent.Sub(OnMergeEvent);
         ECOnRestartTriggered.Sub(ResetScore);
+        ECOnLoseTrigger.Sub(ResetScore);
     }
 
     private void OnDisable()
     {
-        ECOnRestartTriggered.UnSub(ResetScore);
+        ECOnMergeEvent.Unsub(OnMergeEvent);
+        ECOnRestartTriggered.Unsub(ResetScore);
+        ECOnLoseTrigger.Unsub(ResetScore);
     }
 
     public void OnMergeEvent(int Tier)
@@ -49,7 +46,7 @@ public class ScoreManager : MonoBehaviour
         CurrentScore += (int)Mathf.Pow(Tier < GConst.TIER_RANK_1 ? 2 :
                                         Tier < GConst.TIER_RANK_2 ? 3 :
                                         Tier, Tier);
-        ECOnCurrentScoreChange?.Invoke(CurrentScore);
+        ECOnCurrentScoreChange.Invoke(CurrentScore);
         RefreshCombo();
     }
 
@@ -65,10 +62,10 @@ public class ScoreManager : MonoBehaviour
             Combo = 0;
         }
         ScoreMultiplier = 1 + Combo;
-        ECOnScoreMultiChange?.Invoke(ScoreMultiplier);
-        ECOnCurrentScoreAndMultiChange?.Invoke(CurrentScore, ScoreMultiplier);
+        ECOnScoreMultiChange.Invoke(ScoreMultiplier);
+        ECOnCurrentScoreAndMultiChange.Invoke(CurrentScore, ScoreMultiplier);
         int PreCalculated = CurrentScore * ScoreMultiplier;
-        ECOnCurrentScorePreTotal?.Invoke(PreCalculated);
+        ECOnCurrentScorePreTotal.Invoke(PreCalculated);
         CurrentComboTime = ComboDuration;
     }
 
@@ -81,7 +78,7 @@ public class ScoreManager : MonoBehaviour
         } else if (CurrentComboTime != -1)
         {
             CurrentComboTime = -1;
-            ECOnComboTimeChange?.Invoke(0f);
+            ECOnComboTimeChange.Invoke(0f);
             OnComboEnd();
         }
     }
@@ -92,11 +89,11 @@ public class ScoreManager : MonoBehaviour
         CurrentScore = 0;
         ScoreMultiplier = 0;
         Combo = 0;
-        ECOnComboEnd?.Invoke();
+        ECOnComboEnd.Invoke();
         ECOnScoreTotalChange.Invoke(TotalScore);   
         if (bIsFinalCombo)
         {
-            ECOnFinalScore?.Invoke(TotalScore);
+            ECOnFinalScore.Invoke(TotalScore);
         }
     }
 
@@ -107,7 +104,7 @@ public class ScoreManager : MonoBehaviour
             bIsFinalCombo = true;
         }else
         {
-            ECOnFinalScore?.Invoke(TotalScore);
+            ECOnFinalScore.Invoke(TotalScore);
         }
     }
 
@@ -119,9 +116,9 @@ public class ScoreManager : MonoBehaviour
         Combo = 0;
         CurrentComboTime = 0f;
         ECOnScoreTotalChange.Invoke(TotalScore);
-        ECOnCurrentScoreChange?.Invoke(CurrentScore);
-        ECOnScoreMultiChange?.Invoke(ScoreMultiplier);
-        ECOnComboTimeChange?.Invoke(0f);
+        ECOnCurrentScoreChange.Invoke(CurrentScore);
+        ECOnScoreMultiChange.Invoke(ScoreMultiplier);
+        ECOnComboTimeChange.Invoke(0f);
         bIsFinalCombo = false;
     }
 }

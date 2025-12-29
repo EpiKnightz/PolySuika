@@ -1,13 +1,17 @@
 using UnityEngine;
-using Utilities;
 using Lean.Pool;
 using PrimeTween;
 using Sortify;
+using Reflex.Attributes;
 
 public class BGShopManager : MonoBehaviour
 {
+    // Dependencies
+    [Inject] private readonly IDataManager DataManager;
+
+    [BetterHeader("Variables")]
     public Vector3 MainPosition = Vector3.zero;
-    public Vector3 RightSpawnPosition = new Vector3(50, 0, 0);
+    public Vector3 RightSpawnPosition = new(50, 0, 0);
     public float AnimDuration = 1f;
 
     [BetterHeader("Listen To")]
@@ -16,15 +20,9 @@ public class BGShopManager : MonoBehaviour
     // Private
     private Transform CurrentBGShop;
     private Transform OldBGShop;
-    private GetObjectEvent DGetShopPrefab;
 
     void Start()
     {
-        var dataMan = FindAnyObjectByType<DataManager>();
-        if (dataMan != null)
-        {
-            DGetShopPrefab += dataMan.GetCurrentShopBG;
-        }
         SpawnDefaultBGShop();
     }
 
@@ -40,7 +38,7 @@ public class BGShopManager : MonoBehaviour
 
     void ChangeBackgroundShop(int offset)
     {
-        var shopPrefab = DGetShopPrefab?.Invoke();
+        var shopPrefab = DataManager.GetCurrentShopBG();
         if (shopPrefab != null
             && CurrentBGShop != null)
         {
@@ -65,7 +63,7 @@ public class BGShopManager : MonoBehaviour
 
     void SpawnDefaultBGShop()
     {
-        var shopPrefab = DGetShopPrefab?.Invoke();
+        var shopPrefab = DataManager.GetCurrentShopBG();
         if (shopPrefab != null)
         {
             CurrentBGShop = LeanPool.Spawn(shopPrefab, Vector3.zero, Quaternion.identity).transform;

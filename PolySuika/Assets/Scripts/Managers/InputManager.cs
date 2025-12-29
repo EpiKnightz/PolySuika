@@ -24,8 +24,8 @@ public class InputManager : MonoBehaviour
 
     private void OnDisable()
     {
-        ECOnActionAnimFinished.UnSub(OnActionPhaseStart);
-        ECHomeButtonTriggered.UnSub(OnActionPhaseEnd);
+        ECOnActionAnimFinished.Unsub(OnActionPhaseStart);
+        ECHomeButtonTriggered.Unsub(OnActionPhaseEnd);
     }
 
     void OnEnableGameplay(bool bIsEnable)

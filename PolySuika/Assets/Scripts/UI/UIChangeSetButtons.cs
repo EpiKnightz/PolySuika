@@ -1,38 +1,22 @@
 using UnityEngine;
-using Utilities;
 using PrimeTween;
+using Sortify;
 
 public class UIChangeSetButtons : MonoBehaviour
 {
     public float ButtonClickCooldown = 1;
     
-    public IntEvent DChangeDataSet;
-    
+    [BetterHeader("Broadcast On")]
+    public IntEventChannelSO ECOnChangeSetOffsetTriggered = null;
+
     // Private
     private bool ClickEnable = true;
 
-    private void Start()
-    {
-        var dataMan = FindAnyObjectByType<DataManager>();
-        if (dataMan != null)
-        {
-            DChangeDataSet += dataMan.OffsetCurrentLevelSet;
-        }
-    }
-
-    public void OnClick(bool bIsRight)
+    public  void OnClick(int Offset)
     {
         if (ClickEnable)
         {
-
-            if (bIsRight)
-            {
-                DChangeDataSet?.Invoke(1);
-            }
-            else
-            {
-                DChangeDataSet?.Invoke(-1);
-            }
+            ECOnChangeSetOffsetTriggered.Invoke(Offset);
             ClickEnable = false;
             Tween.Delay(ButtonClickCooldown, EnableClick);
         }
@@ -42,6 +26,4 @@ public class UIChangeSetButtons : MonoBehaviour
     {
         ClickEnable = true; 
     }
-
-
 }

@@ -1,8 +1,10 @@
 using PrimeTween;
+using Sortify;
 using UnityEngine;
 
 public class UpDownLoop : MonoBehaviour
 {
+    [BetterHeader("Variables")]
     public float UpEndpoint = 200;
     public float upDownDuration = 2f;
     public float inactiveDelay = 0f;

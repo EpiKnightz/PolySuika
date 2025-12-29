@@ -1,2 +1,12 @@
 fileFormatVersion: 2
 guid: 7d0070bd512d78e42835f94abf596a48
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - ECOnResetLeaderboardTriggered: {fileID: 11400000, guid: 37699295f2789c646996f2c8ae89282a, type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

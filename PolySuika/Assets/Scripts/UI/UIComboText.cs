@@ -7,21 +7,12 @@ using Utilities;
 
 public class UIComboText : MonoBehaviour
 {
+    [Header("References")]
     public TextMeshPro ComboText;
 
     [BetterHeader("Listen To")]
     public Int2EventChannelSO ECOnCurrentScoreAndMultiChange;
     public VoidEventChannelSO ECOnComboEnd;
-
-    //void Start()
-    //{
-    //    var scoreManager = FindAnyObjectByType<ScoreManager>();
-    //    if (scoreManager != null)
-    //    {
-    //        scoreManager.EOnCurrentScoreAndMultiChange += OnScoreAndMultiChange;
-    //        scoreManager.EOnComboEnd += OnComboEnd;
-    //    }
-    //}
 
     private void OnEnable()
     {
@@ -31,8 +22,8 @@ public class UIComboText : MonoBehaviour
 
     private void OnDisable()
     {
-        ECOnCurrentScoreAndMultiChange.UnSub(OnScoreAndMultiChange);
-        ECOnComboEnd.UnSub(OnComboEnd);
+        ECOnCurrentScoreAndMultiChange.Unsub(OnScoreAndMultiChange);
+        ECOnComboEnd.Unsub(OnComboEnd);
     }
 
     public void OnScoreAndMultiChange(int score, int multi)
