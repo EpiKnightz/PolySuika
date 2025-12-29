@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 
-[CreateAssetMenu(fileName = "VoidEventChannelSO", menuName = "SO/VoidEventChannelSO")]
+[CreateAssetMenu(fileName = "EC_On", menuName = "SO/VoidEventChannelSO")]
 public class VoidEventChannelSO : ScriptableObject
 {
     private UnityAction EOnEvent;
@@ -15,7 +15,7 @@ public class VoidEventChannelSO : ScriptableObject
         EOnEvent += action;
     }
 
-    public void UnSub(UnityAction action)
+    public void Unsub(UnityAction action)
     {
         EOnEvent -= action;
     }

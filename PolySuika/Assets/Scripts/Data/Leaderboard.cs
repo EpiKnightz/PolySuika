@@ -50,7 +50,7 @@ public class Leaderboard
     {
         entries.Add(entry);
         Sort();
-        if (entries.Count >= MAX_ENTRIES_COUNT)
+        if (entries.Count > MAX_ENTRIES_COUNT)
         {
             entries.RemoveAt(MAX_ENTRIES_COUNT - 1);
         }

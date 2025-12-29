@@ -1,4 +1,4 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "IntEventChannelSO", menuName = "SO/IntEventChannelSO")]
+[CreateAssetMenu(fileName = "ECi_On", menuName = "SO/IntEventChannelSO")]
 public class IntEventChannelSO : EventChannelSO<int> { }

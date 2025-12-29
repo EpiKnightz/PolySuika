@@ -36,7 +36,7 @@ public class EventChannelSO<T0, T1> : ScriptableObject
         EOnEvent += action;
     }
 
-    public void UnSub(UnityAction<T0, T1> action)
+    public void Unsub(UnityAction<T0, T1> action)
     {
         EOnEvent -= action;
     }
