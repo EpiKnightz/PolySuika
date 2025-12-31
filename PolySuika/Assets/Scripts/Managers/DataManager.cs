@@ -19,7 +19,6 @@ public class DataManager : MonoBehaviour, IInstaller, IDataManager
 
     public void InstallBindings(ContainerBuilder builder)
     {
-        Debug.Log("Installing DataManager Bindings");
         builder.AddSingleton(this, typeof(IDataManager));
     }
 

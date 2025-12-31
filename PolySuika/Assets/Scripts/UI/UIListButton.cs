@@ -1,5 +1,4 @@
 using PrimeTween;
-using Sortify;
 using UnityEngine;
 
 public class UIListButton : UIToggle
@@ -9,9 +8,8 @@ public class UIListButton : UIToggle
     public RectTransform RestartButton;
     public RectTransform HomeButton;
 
-    [BetterHeader("Listen To")]
-    public VoidEventChannelSO ECHomeButtonTriggered;
-    public VoidEventChannelSO ECRestartButtonTriggered;
+    [Header("Listen To")]
+    public VoidEventChannelSO[] ECOnTriggerHideList;
     public IntEventChannelSO ECOnFinalScore;
 
     // Privates
@@ -30,15 +28,19 @@ public class UIListButton : UIToggle
 
     private void OnEnable()
     {
-        ECHomeButtonTriggered.Sub(HideList);
-        ECRestartButtonTriggered.Sub(HideList);
+        for (int i = 0; i < ECOnTriggerHideList.Length; i++)
+        {
+            ECOnTriggerHideList[i].Sub(HideList);
+        }
         ECOnFinalScore.Sub(OnFinalScore);
     }
 
     private void OnDisable()
     {
-        ECHomeButtonTriggered.Unsub(HideList);
-        ECRestartButtonTriggered.Unsub(HideList);
+        for (int i = 0; i < ECOnTriggerHideList.Length; i++)
+        {
+            ECOnTriggerHideList[i].Unsub(HideList);
+        }
         ECOnFinalScore.Unsub(OnFinalScore);
     }
 

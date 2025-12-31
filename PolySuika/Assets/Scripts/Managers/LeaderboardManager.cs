@@ -14,15 +14,11 @@ public class LeaderboardManager : MonoBehaviour, ILeaderboardManager, IInstaller
 
     [BetterHeader("Listen To")]
     public VoidEventChannelSO ECOnResetLeaderboardTriggered;
+    public VoidEventChannelSO ECOnLeaderboardButtonTriggered;
 
     // Private
     private Leaderboard CurrentLeaderboard;
-
-    private void Start()
-    {
-        // Temporary for now
-        UpdateLeaderboardFromDisk();
-    }
+    private bool IsUpdated = true;
 
     public void InstallBindings(ContainerBuilder builder)
     {
@@ -32,39 +28,55 @@ public class LeaderboardManager : MonoBehaviour, ILeaderboardManager, IInstaller
     private void OnEnable()
     {
         ECOnResetLeaderboardTriggered.Sub(ResetLeaderboard);
+        ECOnLeaderboardButtonTriggered.Sub(UpdateLeaderboardFromDisk);
     }
 
     private void OnDisable()
     {
         ECOnResetLeaderboardTriggered.Unsub(ResetLeaderboard);
+        ECOnLeaderboardButtonTriggered.Unsub(UpdateLeaderboardFromDisk);
     }
 
     public void UpdateLeaderboardFromDisk()
     {
-        CurrentLeaderboard = SaveManager.Load<Leaderboard>();
-        if (CurrentLeaderboard != null)
+        if (IsUpdated)
         {
-            ECOnLeaderboardUpdated.Invoke(CurrentLeaderboard);
+            CurrentLeaderboard = SaveManager.Load<Leaderboard>();
+            if (CurrentLeaderboard != null)
+            {
+                ECOnLeaderboardUpdated.Invoke(CurrentLeaderboard);
+            }
+            else
+            {
+                CurrentLeaderboard = new Leaderboard();
+                SaveManager.Save(CurrentLeaderboard);
+            }
+            IsUpdated = false;
         }
-        else
-        {
-            CurrentLeaderboard = new Leaderboard();
-            SaveManager.Save(CurrentLeaderboard);
-        }
+    }
+
+    public bool CheckLeaderboardEligable(int score)
+    { 
+        return CurrentLeaderboard.CompareLast(score);
     }
 
     public void AddLeaderboardEntry(Entry entry)
     {
         CurrentLeaderboard.Add(entry);
-        SaveManager.Save(CurrentLeaderboard);
-        ECOnLeaderboardUpdated.Invoke(CurrentLeaderboard);
+        SaveNewLeaderboard();
     }
 
     public void ResetLeaderboard()
     {
         CurrentLeaderboard.Clear();
+        SaveNewLeaderboard();
+    }
+
+    private void SaveNewLeaderboard()
+    {
         SaveManager.Save(CurrentLeaderboard);
         ECOnLeaderboardUpdated.Invoke(CurrentLeaderboard);
+        IsUpdated = true;
     }
 
     public Leaderboard GetCurrentLeaderboard() { return CurrentLeaderboard; }

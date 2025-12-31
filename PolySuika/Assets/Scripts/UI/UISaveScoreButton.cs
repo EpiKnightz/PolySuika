@@ -2,7 +2,6 @@ using PrimeTween;
 using Sortify;
 using TMPro;
 using UnityEngine;
-using System;
 using Reflex.Attributes;
 
 [RequireComponent(typeof(RectTransform))]
@@ -10,6 +9,7 @@ public class UISaveScoreButton : MonoBehaviour
 {
     // Dependencies
     [Inject] readonly ILeaderboardManager LeaderboardManager;
+    [Inject] readonly IUIManager UIManager;
 
     [Header("References")]
     [SerializeField] private TMP_InputField UITextInput;
@@ -47,12 +47,13 @@ public class UISaveScoreButton : MonoBehaviour
     // Cache the final score and hightlight the button
     public void OnFinalScore(int score)
     {
-        if (score > 0)
+        if (score > 0
+            && LeaderboardManager.CheckLeaderboardEligable(score))
         {
             gameObject.SetActive(true);
             FinalScore = score;
             ThisRectTransform.localScale = Vector3.one * (1 - HighlightScaleChanges);
-            Tween.Scale(ThisRectTransform, (1 + HighlightScaleChanges), HighlightDuration, Ease.InOutSine, -1, CycleMode.Yoyo);          
+            Tween.Scale(ThisRectTransform, (1 + HighlightScaleChanges), HighlightDuration, Ease.InOutSine, -1, CycleMode.Yoyo);
         }
     }
 
@@ -81,7 +82,7 @@ public class UISaveScoreButton : MonoBehaviour
             // Add new Entry
             Entry newEntry = new(name, FinalScore);
             LeaderboardManager.AddLeaderboardEntry(newEntry);
-            UIManager.instance.SwitchActivePanel(UIManager.PanelType.Leaderboard, true);
+            UIManager.SwitchActivePanel(PanelType.Leaderboard, true);
             FinalScore = 0;
         }else
         {

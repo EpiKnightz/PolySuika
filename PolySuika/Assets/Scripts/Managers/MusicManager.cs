@@ -1,13 +1,14 @@
 using UnityEngine;
 using FMODUnity;
+using Sortify;
 
 [RequireComponent(typeof(StudioEventEmitter))]
 public class MusicManager : MonoBehaviour
 {
-    [Header("Static Mapping")]
+    [Header("References")]
     public StudioEventEmitter EventEmitter;
 
-    [Header("Listen To")]
+    [BetterHeader("Listen To")]
     public IntEventChannelSO ECOnSetChange;
 
     private void OnEnable()

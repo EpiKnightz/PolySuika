@@ -1,10 +1,9 @@
 using PrimeTween;
-using Sortify;
 using UnityEngine;
 
 public class RotatingLoop : MonoBehaviour
 {
-    [BetterHeader("Variables")]
+    [Header("Variables")]
     public float rotateEnd = 360;
     public float rotateDuration = 1f;
     public float inactiveDelay = 0f;

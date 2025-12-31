@@ -1,11 +1,13 @@
 ﻿using Sortify;
 using UnityEngine;
-using Utilities;
-using static UIManager;
+using Reflex.Attributes;
 
 [RequireComponent(typeof(RectTransform))]
 public class UIPanel : MonoBehaviour
 {
+    // Dependencies
+    [Inject] private readonly IUIManager UIManager;
+
     [SerializeField] private RectTransform PanelTransform;
     [SerializeField] private PanelType MenuPanelType;
     [SerializeField] private float CameraPos;
@@ -24,9 +26,9 @@ public class UIPanel : MonoBehaviour
 
     public void OnClick()
     {
-        UIManager.instance.SwitchActivePanel(MenuPanelType, true);
+        UIManager.SwitchActivePanel(MenuPanelType, true);
         ECOnClickTriggered?.Invoke();
-        UIManager.instance.EOnAnimFinished.AddListener((MenuPanelType) => ECOnChangePanelAnimFinished?.Invoke());
+        UIManager.EOnAnimFinished.AddListener((MenuPanelType) => ECOnChangePanelAnimFinished?.Invoke());
     }
 
     public bool IsSameType(PanelType panelType)

@@ -68,6 +68,15 @@ public class Leaderboard
         entries.Sort((a, b) => b.CompareTo(a));
     }
 
+    public bool CompareLast(int score)
+    {
+        if (entries.Count < MAX_ENTRIES_COUNT)
+        {
+            return true;
+        }
+        return score > entries[entries.Count - 1].Score;
+    }
+
     public void Clear()
     {
         entries.Clear(); 

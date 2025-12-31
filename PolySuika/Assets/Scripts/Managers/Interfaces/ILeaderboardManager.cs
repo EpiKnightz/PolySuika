@@ -4,4 +4,5 @@
     Leaderboard GetCurrentLeaderboard();
     void ResetLeaderboard();
     void UpdateLeaderboardFromDisk();
+    bool CheckLeaderboardEligable(int score);
 }

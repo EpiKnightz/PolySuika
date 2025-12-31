@@ -1,21 +1,13 @@
-using FirstGearGames.SmoothCameraShaker;
-using FMODUnity;
-using System;
 using Lean.Pool;
 using PrimeTween;
-using Solo.MOST_IN_ONE;
+using Reflex.Attributes;
+using Reflex.Core;
 using Sortify;
 using System.Collections.Generic;
-using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal;
-using Utilities;
-using WanzyeeStudio;
 using Random = UnityEngine.Random;
-using Reflex.Attributes;
 
-public class TierManager : BaseSingleton<TierManager>
+public class TierManager : MonoBehaviour, ITierManager, IInstaller
 {
     // Dependencies
     [Inject] private readonly IDataManager DataManager;
@@ -23,30 +15,25 @@ public class TierManager : BaseSingleton<TierManager>
     [BetterHeader("Spawn Settings")]
     public int MaxSpawnableTier = 2;
     public int TierUpMergeCount = 5;
-    public float CooldownTime = 1f;    
+    public float CooldownTime = 1f;
     public float MinSpawnHeight = 2f;
     public float MaxSpawnHeight = 2.5f;
     public float RandomSpawnAngle = 90f;
-    public Vector3 BaseSpawnPosition = new Vector3(0, 0, 1);
+    public Vector3 BaseSpawnPosition = new(0, 0, 1);
+    public float PopUpStartScale = 0.001f;
 
     [Header("Tier Increment")]
     public float MassIncrement = 1;
-    public float TimeIncrement = 0.15f;    
+    public float TimeIncrement = 0.15f;
 
     [Header("Spawn Preview")]
-    public Vector3 SpawnNextPosition = new Vector3(-0.45f, 2.35f, -4);
+    public Vector3 SpawnNextPosition = new(-0.45f, 2.35f, -4);
     public float SpawnNextScaleMultiplier = 0.6f;
-    public Vector3 SpawnRefMinMax = new Vector3(1.35f, 3.25f, -2);
-
-    [BetterHeader("FX")]
-    public GameObject MergeVFXPrefab;
-    public EventReference MergeSFX;
-    public ShakeData[] MergeCamFX;
-    public float PopUpStartScale = 0.001f;
-    private ChromaticAberration chromaticAberration;
+    public Vector3 SpawnRefMinMax = new(1.35f, 3.25f, -2);
 
     [BetterHeader("Broadcast On")]
     public IntEventChannelSO ECOnMergeEvent = null;
+    public VectorEventChannelSO ECOnMergePosition = null;
 
     [BetterHeader("Listen To")]
     public VoidEventChannelSO ECActionButtonTriggered;
@@ -54,17 +41,13 @@ public class TierManager : BaseSingleton<TierManager>
     public IntEventChannelSO ECOnSetChange;
     public VoidEventChannelSO ECOnLoseTrigger;
 
-    // Events
-    //private event Action<int> EMergeTierEvent;
-    //private Action DTriggerRestartManually;
-
     // Privates
     private float lastSpawnTime = 0;
     private float scaleIncrement = 0.35f;
     private GameObject[] TierPrefabs;
     private float baseScale = 1f;
-    private Transform spawnedTransform;
-    private Transform cachedTransform;
+    private Mergable spawnedTransform;
+    private Mergable cachedTransform;
     private int chosenTier = -1;
     private HashSet<Mergable> CurrentMergableList = new();
     private HashSet<GameObject> CurrentRefList = new();
@@ -74,13 +57,10 @@ public class TierManager : BaseSingleton<TierManager>
     private bool bIsGameEnd = false;
     private const float PHYSIC_WAIT_TIME = 0.001f;
 
-    private void Start()
-    {        
-        var profile = GameObject.Find("Post Processing").GetComponent<Volume>().profile;
-        if (profile != null)
-        {
-            profile.TryGet(out chromaticAberration);
-        }
+
+    public void InstallBindings(ContainerBuilder builder)
+    {
+        builder.AddSingleton(this, typeof(ITierManager));
     }
 
     private void OnEnable()
@@ -99,7 +79,7 @@ public class TierManager : BaseSingleton<TierManager>
         ECOnLoseTrigger.Unsub(OnGameEnd);
     }
 
-    public void OnCurrentSetChanged(int newIdx)
+    private void OnCurrentSetChanged(int newIdx)
     {
         if (CurrentMergableList.Count > 0)
         {
@@ -111,7 +91,7 @@ public class TierManager : BaseSingleton<TierManager>
         }
     }
 
-    public void OnActionTriggered()
+    private void OnActionTriggered()
     {
         if (bIsLevelDirty)
         {
@@ -122,7 +102,7 @@ public class TierManager : BaseSingleton<TierManager>
         }
     }
 
-    public void UpdateTierPrefabs()
+    private void UpdateTierPrefabs()
     {
         TierPrefabs = DataManager.GetCurrentTierPrefabs();
         baseScale = DataManager.GetCurrentBaseScale();
@@ -135,27 +115,25 @@ public class TierManager : BaseSingleton<TierManager>
     }
 
     // Spawn and show as preview
-    public void SpawnNext()
+    private void SpawnNext()
     {
         chosenTier = Random.Range(0, currentMaxTier + 1);
 
         if (TierPrefabs[chosenTier] != null)
         {
             var clone = SpawnAdvance(chosenTier, SpawnNextPosition, false, false);
-            if (spawnedTransform == null)
+            if (clone.TryGetComponent<Mergable>(out var mergable))
             {
-                spawnedTransform = clone.transform;
-            }
-            else
-            {
-                cachedTransform = clone.transform;
-            }
-            clone.GetComponent<Collider>().enabled = false;
-            clone.GetComponent<Rigidbody>().isKinematic = true;
-            var renderer = clone.GetComponent<Renderer>();
-            if (renderer != null)
-            {
-                renderer.shadowCastingMode = ShadowCastingMode.Off;
+                if (spawnedTransform == null)
+                {
+                    spawnedTransform = mergable;
+                }
+                else
+                {
+                    cachedTransform = mergable;
+                }
+                mergable.EnablePhysic(false);
+                mergable.EnableShadow(false);
             }
             float scaleFactor = baseScale * SpawnNextScaleMultiplier;
             clone.transform.localScale = new Vector3(scaleFactor, scaleFactor, scaleFactor);
@@ -175,31 +153,25 @@ public class TierManager : BaseSingleton<TierManager>
         {
             lastSpawnTime = Time.timeSinceLevelLoad;
         }
-        offsetPosition.y = math.clamp(offsetPosition.y, MinSpawnHeight, MaxSpawnHeight);
-        spawnedTransform.SetPositionAndRotation(offsetPosition,
-            spawnedTransform.rotation);
-        var renderer = spawnedTransform.GetComponent<Renderer>();
-        if (renderer != null)
-        {
-            renderer.shadowCastingMode = ShadowCastingMode.On;
-        }
+        offsetPosition.y = Mathf.Clamp(offsetPosition.y, MinSpawnHeight, MaxSpawnHeight);
+        spawnedTransform.transform.SetPositionAndRotation(offsetPosition,
+            spawnedTransform.transform.rotation);
+        spawnedTransform.EnableShadow(true);
 
-        PoppingUp(spawnedTransform.gameObject, chosenTier);        
-        // MOST_HapticFeedback.Generate(MOST_HapticFeedback.HapticTypes.SoftImpact);
+        PoppingUp(spawnedTransform.gameObject, chosenTier);
         SpawnNext();
         Tween.Delay(PHYSIC_WAIT_TIME, ResetPhysic);
     }
 
-    void ResetPhysic()
+    private void ResetPhysic()
     {
-        spawnedTransform.GetComponent<Collider>().enabled = true;
-        spawnedTransform.GetComponent<Rigidbody>().isKinematic = false;
+        spawnedTransform.EnablePhysic(true);
 
         spawnedTransform = cachedTransform;
         cachedTransform = null;
     }
 
-    public GameObject SpawnAdvance(int Tier, Vector3 offsetPosition, bool popup = true, bool usePrefabZ = true)
+    public GameObject SpawnAdvance(int Tier, Vector3 offsetPosition, bool isMerged = true, bool usePrefabZ = true)
     {
         var finalPosition = TierPrefabs[Tier].transform.position + offsetPosition;
         if (usePrefabZ)
@@ -209,15 +181,18 @@ public class TierManager : BaseSingleton<TierManager>
 
         Vector3 eulerRotation = Vector3.zero;
         float RandomAngle = Random.Range(-RandomSpawnAngle, RandomSpawnAngle);
-        if ((TierPrefabs[Tier].GetComponent<Rigidbody>().constraints & RigidbodyConstraints.FreezeRotationZ)
+        var rigidbody = TierPrefabs[Tier].GetComponent<Rigidbody>();
+        if ((rigidbody.constraints & RigidbodyConstraints.FreezeRotationZ)
             != RigidbodyConstraints.FreezeRotationZ)
         {
             eulerRotation.z = RandomAngle;
-        }else if ((TierPrefabs[Tier].GetComponent<Rigidbody>().constraints & RigidbodyConstraints.FreezeRotationX)
+        }
+        else if ((rigidbody.constraints & RigidbodyConstraints.FreezeRotationX)
             != RigidbodyConstraints.FreezeRotationX)
         {
             eulerRotation.x = RandomAngle;
-        }else
+        }
+        else
         {
             eulerRotation.y = RandomAngle;
         }
@@ -226,28 +201,44 @@ public class TierManager : BaseSingleton<TierManager>
                                     finalPosition,
                                     finalRotation);
         var newRigid = NewObject.GetComponent<Rigidbody>();
-        newRigid.mass = 1 + (Tier * MassIncrement);        
+        newRigid.mass = 1 + (Tier * MassIncrement);
         Mergable NewMergable = NewObject.GetComponent<Mergable>();
         NewMergable.SetTier(Tier);
-        NewMergable.EOnMergeTrigger += IncreaseMergeCount;
-        NewMergable.EOnMergeTrigger += OnMergeEvent;
-        NewMergable.EOnMergeTrigger += CameraShakeFX;
-        NewMergable.EOnMergeTrigger += HapticFeedback;
-        NewMergable.EOnMergePosition += SpawnVFX;
-        NewMergable.EOnMergePosition += PlaySFX;
+        NewMergable.DRequestMerging.Reg(ProcessMergingRequest);
         CurrentMergableList.Add(NewMergable);
-        if (popup)
+        if (isMerged)
         {
             PoppingUp(NewObject, Tier);
             // HAX: Popup = true mean this is coming from a merge
             NewMergable.SetImpacted(true);
-            newRigid.isKinematic = false;
-            NewObject.GetComponent<Collider>().enabled = true;
+            NewMergable.EnablePhysic(true);
         }
         return NewObject;
     }
 
-    public void IncreaseMergeCount(int Tier)
+    private void ProcessMergingRequest(Mergable first, Mergable second)
+    {
+        if (first.GetTier() == GetMaxTier() - 1)
+        {
+            return;
+        }
+        second.SetIsMerging(true);
+        second.EnablePhysic(false);
+        first.EnablePhysic(false);
+        first.SetIsMerging(true);
+
+        Vector3 mergePosition = (first.transform.position + second.transform.position) / 2;
+        int firstTier = first.GetTier();
+        SpawnAdvance(firstTier + 1, mergePosition);
+        OnMergeEvent(firstTier);
+        IncreaseMergeCount(firstTier);
+        OnMergePosition(mergePosition);
+
+        ReturnMergable(first);
+        ReturnMergable(second);
+    }
+
+    private void IncreaseMergeCount(int Tier)
     {
         currentMergeCount++;
         if (currentMergeCount % TierUpMergeCount == 0
@@ -257,9 +248,14 @@ public class TierManager : BaseSingleton<TierManager>
         }
     }
 
-    public void OnMergeEvent(int Tier)
+    private void OnMergeEvent(int Tier)
     {
         ECOnMergeEvent.Invoke(Tier);
+    }
+
+    private void OnMergePosition(Vector3 pos)
+    {
+        ECOnMergePosition.Invoke(pos);
     }
 
     public void ResetTier()
@@ -272,71 +268,13 @@ public class TierManager : BaseSingleton<TierManager>
         bIsGameEnd = false;
     }
 
-    // TO-DO: Move this to different scripts and use event system
-    public void CameraShakeFX(int Tier)
-    {
-        // Might increase the shake intensity based on Tier?
-        float intensity = 0.3f + 0.1f * Tier;
-        int shakeIntensityIdx = 0;
-        if (MergeCamFX.Length > 0)
-        {
-            if (MergeCamFX.Length == 3)
-            {
-                shakeIntensityIdx = Tier < GConst.TIER_RANK_1 ? 0 : Tier < GConst.TIER_RANK_2 ? 1 : 2;
-            }
-            CameraShakerHandler.Shake(MergeCamFX[shakeIntensityIdx]);
-        }
-        if (chromaticAberration != null)
-        {
-            Tween.Custom(0f, intensity, 0.125f, cycles: 2, cycleMode: CycleMode.Rewind, ease: Ease.InOutSine, onValueChange: newVal => {
-                chromaticAberration.intensity.Override(newVal);
-            });
-        }
-    }
-
-    public void HapticFeedback(int Tier)
-    {
-        if (Tier < GConst.TIER_RANK_1)
-        {
-            MOST_HapticFeedback.Generate(MOST_HapticFeedback.HapticTypes.LightImpact);
-        }
-        else if (Tier < GConst.TIER_RANK_2)
-        {
-            MOST_HapticFeedback.Generate(MOST_HapticFeedback.HapticTypes.MediumImpact);
-        }
-        else if (Tier < GConst.TIER_RANK_3)
-        {
-            MOST_HapticFeedback.Generate(MOST_HapticFeedback.HapticTypes.HeavyImpact);
-        }
-        else
-        {
-            MOST_HapticFeedback.Generate(MOST_HapticFeedback.HapticTypes.Failure);
-        }
-    }
-
-    public void SpawnVFX(Vector3 position)
-    {
-        if (MergeVFXPrefab != null)
-        {
-            var vfx = Instantiate(MergeVFXPrefab,
-                position,
-                Quaternion.identity);
-            Destroy(vfx, 2f);
-        }
-    }
-
-    public void PlaySFX(Vector3 position)
-    {
-        RuntimeManager.PlayOneShot(MergeSFX, position);
-    }
-
     public void PoppingUp(GameObject Object, int Tier)
     {
         Object.transform.localScale = new Vector3(PopUpStartScale, PopUpStartScale, PopUpStartScale);
         // Use tween to ramp up the scale of the object to their tier size
         Tween.Scale(Object.transform,
-            (baseScale + Tier * scaleIncrement * baseScale),
-            (0.75f + Tier * TimeIncrement),
+            baseScale + (Tier * scaleIncrement * baseScale),
+            0.75f + (Tier * TimeIncrement),
             ease: Ease.OutCirc);
     }
 
@@ -349,22 +287,19 @@ public class TierManager : BaseSingleton<TierManager>
 
         for (int i = 0; i < TierPrefabs.Length; i++)
         {
-            var offsetPos = new Vector3(minX + i * XSpacing, SpawnRefMinMax.y, SpawnRefMinMax.z);
+            var offsetPos = new Vector3(minX + (i * XSpacing), SpawnRefMinMax.y, SpawnRefMinMax.z);
             var finalPosition = TierPrefabs[i].transform.position + offsetPos;
             var finalRotation = TierPrefabs[i].transform.rotation;
-            //finalRotation.SetEulerRotation(0,0,offsetZ);
             GameObject NewObject = Instantiate(TierPrefabs[i],
                                         finalPosition,
-                                        finalRotation);            
-            NewObject.GetComponent<Collider>().enabled = false;
-            NewObject.GetComponent<Rigidbody>().isKinematic = true;
-            var renderer = NewObject.GetComponent<Renderer>();
-            if (renderer != null)
+                                        finalRotation);
+            if (NewObject.TryGetComponent<Mergable>(out var mergable))
             {
-                renderer.shadowCastingMode = ShadowCastingMode.Off;
+                mergable.EnablePhysic(false);
+                mergable.EnableShadow(false);
+                mergable.enabled = false;
             }
-            NewObject.GetComponent<Mergable>().enabled = false;
-            NewObject.transform.localScale = Vector3.one * baseScale * 0.5f;
+            NewObject.transform.localScale = 0.5f * baseScale * Vector3.one;
             NewObject.layer = 0;
             NewObject.transform.SetParent(transform, true);
             CurrentRefList.Add(NewObject);
@@ -372,7 +307,7 @@ public class TierManager : BaseSingleton<TierManager>
     }
 
 
-    public void ClearBoard()
+    private void ClearBoard()
     {
         foreach (var script in CurrentMergableList)
         {
@@ -387,15 +322,9 @@ public class TierManager : BaseSingleton<TierManager>
         }
     }
 
-    // Psuedo section, using pool later
     public void ReturnMergable(Mergable script, bool removeFromList = true)
     {
-        script.EOnMergeTrigger -= IncreaseMergeCount;
-        script.EOnMergeTrigger -= OnMergeEvent;
-        script.EOnMergeTrigger -= CameraShakeFX;
-        script.EOnMergeTrigger -= HapticFeedback;
-        script.EOnMergePosition -= SpawnVFX;
-        script.EOnMergePosition -= PlaySFX;
+        script.DRequestMerging.Unreg(ProcessMergingRequest);
         if (removeFromList)
         {
             CurrentMergableList.Remove(script);
@@ -412,7 +341,7 @@ public class TierManager : BaseSingleton<TierManager>
         CurrentRefList.Clear();
     }
 
-    public void OnGameEnd()
+    private void OnGameEnd()
     {
         bIsGameEnd = true;
     }

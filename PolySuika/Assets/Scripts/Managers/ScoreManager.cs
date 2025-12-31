@@ -31,14 +31,14 @@ public class ScoreManager : MonoBehaviour
     {
         ECOnMergeEvent.Sub(OnMergeEvent);
         ECOnRestartTriggered.Sub(ResetScore);
-        ECOnLoseTrigger.Sub(ResetScore);
+        ECOnLoseTrigger.Sub(OnEndGame);
     }
 
     private void OnDisable()
     {
         ECOnMergeEvent.Unsub(OnMergeEvent);
         ECOnRestartTriggered.Unsub(ResetScore);
-        ECOnLoseTrigger.Unsub(ResetScore);
+        ECOnLoseTrigger.Unsub(OnEndGame);
     }
 
     public void OnMergeEvent(int Tier)

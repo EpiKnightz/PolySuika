@@ -1,30 +1,35 @@
 using PrimeTween;
+using Reflex.Core;
 using Sortify;
 using UnityEngine;
 using UnityEngine.Events;
 using WanzyeeStudio;
-
+public enum PanelType
+{
+    Menu,
+    Action,
+    Leaderboard
+}
 // Responsible for enabling/disabling panels
 // Scaling of world space UI based on resolution
-public class UIManager : BaseSingleton<UIManager>
+public class UIManager : MonoBehaviour, IUIManager, IInstaller
 {
     [Header("References")]
-    public UIPanel[] PanelArray;   
+    public UIPanel[] PanelArray;
     public Transform Camera;
-
+     
     [BetterHeader("Variables")]
     public float AnimDuration = 3f;
 
-    public UnityEvent<PanelType> EOnAnimFinished;
-
-    public enum PanelType
-    {
-        Menu,
-        Action,
-        Leaderboard
-    }
+    public UnityEvent<PanelType> EOnAnimFinished => _EOnAnimFinished;
+    private UnityEvent<PanelType> _EOnAnimFinished = new();
 
     private PanelType CurrentActivePanel = PanelType.Menu;
+
+    public void InstallBindings(ContainerBuilder containerBuilder)
+    {
+        containerBuilder.AddSingleton(this, typeof(IUIManager));
+    }
 
     void Start()
     {
@@ -32,10 +37,10 @@ public class UIManager : BaseSingleton<UIManager>
     }
 
     public void SwitchActivePanel(PanelType activePanel, bool IsAnimate = false)
-    {        
+    {
         if (IsAnimate)
         {
-            if (Tween.GetTweensCount(Camera) >0)
+            if (Tween.GetTweensCount(Camera) > 0)
             {
                 // If there is already a tween happening with camera, don't proceed
                 return;
@@ -51,9 +56,10 @@ public class UIManager : BaseSingleton<UIManager>
                 if (IsAnimate)
                 {
                     AnimateUI(PanelArray[i].GetCameraPos());
-                }else
+                }
+                else
                 {
-                    Camera.SetPositionAndRotation(new Vector3(Camera.position.x, PanelArray[i].GetCameraPos(), Camera.position.z), Camera.rotation);
+                    SetCameraPos(PanelArray[i].GetCameraPos());
                 }
             }
             else
@@ -70,13 +76,13 @@ public class UIManager : BaseSingleton<UIManager>
         }
     }
 
-    public Tween AnimateUI(float PositionY)
+    private Tween AnimateUI(float PositionY)
     {
         return Tween.PositionY(Camera, PositionY, AnimDuration, ease: Ease.InOutSine)
-                                .OnComplete(() => EOnAnimFinished?.Invoke(CurrentActivePanel));
+                                .OnComplete(() => _EOnAnimFinished?.Invoke(CurrentActivePanel));
     }
 
-    public void SetCameraPos(float PositionY)
+    private void SetCameraPos(float PositionY)
     {
         Camera.SetPositionAndRotation(new Vector3(Camera.position.x, PositionY, Camera.position.z),
                                         Camera.rotation);
