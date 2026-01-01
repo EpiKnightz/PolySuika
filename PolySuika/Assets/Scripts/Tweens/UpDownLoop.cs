@@ -9,7 +9,7 @@ public class UpDownLoop : MonoBehaviour
     public float inactiveDelay = 0f;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    private void Start()
     {
         Tween.LocalPositionY(transform, UpEndpoint, upDownDuration, cycles: -1, cycleMode: CycleMode.Yoyo, ease: Ease.InOutSine,
             endDelay: inactiveDelay);
