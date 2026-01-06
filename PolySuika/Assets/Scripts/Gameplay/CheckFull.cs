@@ -1,8 +1,6 @@
 using PrimeTween;
 using Sortify;
-using System.Collections.Generic;
 using UnityEngine;
-using Utilities;
 
 public class CheckFull : MonoBehaviour
 {
@@ -66,36 +64,37 @@ public class CheckFull : MonoBehaviour
         }
     }
 
-    void CheckOnImpact(Mergable mergable)
+    private void CheckOnImpact(Mergable mergable)
     {
         RayCheck();
         mergable.EOnImpact -= CheckOnImpact;
     }
 
-    void CheckOnDisable(Mergable mergable)
+    private void CheckOnDisable(Mergable mergable)
     {
         RayCheck();
         mergable.EOnDisable -= CheckOnDisable;
     }
 
-    bool RayCheck()
+    private bool RayCheck()
     {
         // Need to check if there are still mergables inside the trigger
         Collider[] colliders = Physics.OverlapBox(transform.position, transform.localScale / 2f,
                                                     transform.rotation, MergableLayerMask);
-        if (colliders.Length < 1)
+        if (colliders.Length == 0)
         {
             // Stop countdown
             ResetCountdown();
             return false;
-        } else
+        }
+        else
         {
             StartCountdown();
             return true;
-        }        
+        }
     }
 
-    void StartCountdown()
+    private void StartCountdown()
     {
         if (!bIsCountdown)
         {
@@ -106,11 +105,16 @@ public class CheckFull : MonoBehaviour
         }
     }
 
-    void ResetCountdown()
+    private void ResetCountdown()
     {
         bIsCountdown = false;
         currentCountdown = 0f;
 
+        ResetLine();
+    }
+
+    private void ResetLine()
+    {
         warningMaterial.SetFloat("_Alpha", 0);
         warningTween.Stop();
     }
@@ -126,7 +130,7 @@ public class CheckFull : MonoBehaviour
                 if (RayCheck())
                 {
                     ECOnLoseTrigger.Invoke();
-                    bIsCountdown = false;
+                    ResetCountdown();
                 }
             }
         }
