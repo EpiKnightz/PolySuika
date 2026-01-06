@@ -1,24 +1,7 @@
 using System.Collections.Generic;
-using System.Drawing;
-using UnityEngine;
-using Color = UnityEngine.Color;
 
 namespace Utilities
 {
-    //public delegate void VoidEvent();
-    //public delegate void IntEvent(int value);
-    //public delegate void Int2Event(int value1, int value2);
-    //public delegate void BoolEvent(bool value);
-    //public delegate void FloatEvent(float value);
-    //public delegate void DoubleEvent(double value);
-    //public delegate void Vector3Event(Vector3 value);
-    //public delegate void LeaderboardEvent(Leaderboard value);    
-    //public delegate void EntryEvent(Entry value);
-    public delegate Leaderboard GetLeaderboardEvent();
-    public delegate GameObject[] GetObjectsEvent();
-    public delegate GameObject GetObjectEvent();
-    public delegate float GetFloatEvent();
-
     public enum ScoreMilestone
     {
         NONE = 0,
@@ -45,13 +28,13 @@ namespace Utilities
         public const int GREAT_SCORE = (int)ScoreMilestone.GREAT;
         public const int SUPER_SCORE = (int)ScoreMilestone.SUPER;
         public const int UNREAL_SCORE = (int)ScoreMilestone.UNREAL;
-        public const int INSANE_SCORE = (int)(ScoreMilestone.INSANE);
-        public const int MAGICAL_SCORE = (int)(ScoreMilestone.MAGICAL);
-        public const int EXTREME_SCORE = (int)(ScoreMilestone.EXTREME);
-        public const int ULTIMATE_SCORE = (int)(ScoreMilestone.ULTIMATE);
+        public const int INSANE_SCORE = (int)ScoreMilestone.INSANE;
+        public const int MAGICAL_SCORE = (int)ScoreMilestone.MAGICAL;
+        public const int EXTREME_SCORE = (int)ScoreMilestone.EXTREME;
+        public const int ULTIMATE_SCORE = (int)ScoreMilestone.ULTIMATE;
 
-        public static Dictionary<int, string> ColorDict = new Dictionary<int, string>
-            {
+        public static Dictionary<int, string> ColorDict = new()
+        {
                 {0, "052B98" },
                 {1, "007A98" },
                 {2, "067A00" },
@@ -62,8 +45,8 @@ namespace Utilities
                 {7, "2700FF" },
                 {8, "AAAAAA" }
             };
-        public static Dictionary<ScoreMilestone, string> ScoreMilestoneColor = new Dictionary<ScoreMilestone, string>
-            {
+        public static Dictionary<ScoreMilestone, string> ScoreMilestoneColor = new()
+        {
                 { ScoreMilestone.NICE, "052B98" },
                 { ScoreMilestone.GOOD, "007A98" },
                 { ScoreMilestone.GREAT, "067A00" },
@@ -91,83 +74,94 @@ namespace Utilities
 
         public static string ScoreMilestoneToColoredText(ScoreMilestone milestone)
         {
-            if (milestone == ScoreMilestone.ULTIMATE)
-            {
-                return RainbowString(milestone.ToString() + "!");
-            }
-            if (GConst.ScoreMilestoneColor.TryGetValue(milestone, out string hexColor))
-            {
-                return "<color=#" + hexColor + ">" + milestone.ToString() + "!</color>";
-            }
-            return milestone.ToString();
+            return milestone == ScoreMilestone.ULTIMATE
+                ? RainbowString(milestone.ToString() + "!")
+                : GConst.ScoreMilestoneColor.TryGetValue(milestone, out string hexColor)
+                ? "<color=#" + hexColor + ">" + milestone.ToString() + "!</color>"
+                : milestone.ToString();
         }
 
         public static string RankToColoredText(int rank, string input)
         {
-            if (GConst.ColorDict.TryGetValue(rank, out string hexColor))
-            {
-                return "<color=#" + hexColor + ">" + input + "</color>";
-            }
-            return input;
+            return GConst.ColorDict.TryGetValue(rank, out string hexColor) ? "<color=#" + hexColor + ">" + input + "</color>" : input;
         }
     }
 
-        // Music CC:
-        // Alex McCulloch chill-guitar >< chill-chiptune
+    public static class ListUtilities
+    {
+        public static int RepeatIndex<T>(int index, ICollection<T> collection)
+        {
+            return index >= collection.Count ? 0
+                : index < 0 ? collection.Count - 1
+            : index;
+        }
+    }
 
-        //TO-DO: Day3
-        // v Add VFX
-        // v Add SFX
-        // v Add Camera Shake
+    // Music CC:
+    // Alex McCulloch chill-guitar >< chill-chiptune
 
-        //TO-DO: Day4
-        // v Add Music
-        // v Add Outline effect with post processing
-        // v Score Manager
+    //TO-DO: Day3
+    // v Add VFX
+    // v Add SFX
+    // v Add Camera Shake
 
-        //TO-DO: Day5
-        // v Multiplier apply to score
-        // v Camera scaler according to resolution
-        // v Add Music
-        // v Add Outline effect with post processing
-        // v Settings up builds
+    //TO-DO: Day4
+    // v Add Music
+    // v Add Outline effect with post processing
+    // v Score Manager
 
-        //TO-DO: Day6
-        // Scriptable Object for
-        //   v LevelSet
-        //   GameSettings
-        // Local Leaderboard
-        // Add Menus: 
-        //   v Play Button
-        //   v List Buttons
-        //   p Restart Button
-        //   p Leaderboard Button
+    //TO-DO: Day5
+    // v Multiplier apply to score
+    // v Camera scaler according to resolution
+    // v Add Music
+    // v Add Outline effect with post processing
+    // v Settings up builds
 
-        //TO-DO: Day7 (& a few more wishlist)
-        // v Local Leaderboard
-        // Restart the game
-        // Scale/Anchor of World Space button in different resolution
-        // w Extra: Make mergables poolable
-        // UI Element/Image HDR Material
-        // w Change set
+    //TO-DO: Day6
+    // Scriptable Object for
+    //   v LevelSet
+    //   GameSettings
+    // Local Leaderboard
+    // Add Menus: 
+    //   v Play Button
+    //   v List Buttons
+    //   p Restart Button
+    //   p Leaderboard Button
 
-        // TO-DO: Day8
-        // v Local Leaderboard flow
-        // v Restart the game
+    //TO-DO: Day7 (& a few more wishlist)
+    // v Local Leaderboard
+    // Restart the game
+    // Scale/Anchor of World Space button in different resolution
+    // w Extra: Make mergables poolable
+    // UI Element/Image HDR Material
+    // w Change set
 
-        // TO-DO: Day11
-        // Change BG shop based on selected set
-        // Add new Christmas set
+    // TO-DO: Day8
+    // v Local Leaderboard flow
+    // v Restart the game
 
-        // Side works:
-        // v Cloud Displacement shader
-        // v Vibration on mobile (only slightly)
+    // TO-DO: Day11
+    // Change BG shop based on selected set
+    // Add new Christmas set
 
-        // Add new set check list:
-        // - Collider and Renderer on main object
-        // - Central pivot
-        // - Location 0,0,1 -> to be rework
-        // - Layer = Mergables
-        // - Add rigid body
-        // - Add Mergable script
+    // TO-DO: Day18
+    // New game mode: Endless mode
+
+    // Side works:
+    // v Cloud Displacement shader
+    // v Vibration on mobile (only slightly)
+
+    // Add new set check list:
+    // - Collider and Renderer on main object
+    // - Central pivot
+    // - Location 0,0,1 -> to be rework
+    // - Layer = Mergables
+    // - Add rigid body
+    // - Add Mergable script
+
+    // Day 21
+    // Optimization
+
+    // Day 22
+    // Polish UI
 }

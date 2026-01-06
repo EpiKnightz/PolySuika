@@ -2,17 +2,17 @@ using Sortify;
 using UnityEngine;
 
 [ExecuteInEditMode]
-[RequireComponent (typeof(Camera))]
+[RequireComponent(typeof(Camera))]
 public class CameraUtilities : MonoBehaviour
 {
     [BetterHeader("Variables")]
-    [SerializeField] private float target_fov = 14.25f;
+    [SerializeField] private float TargetFOV = 14.2f;
 
     [BetterHeader("Broadcast On")]
     public IntEventChannelSO ECResolutionChange = null;
 
     // Privates
-    private int current_h = 2400;
+    private int CurrentHeight = 2400;
     private int BaseWidth = 1080;
 
     [SerializeField] private Camera Camera;
@@ -30,10 +30,6 @@ public class CameraUtilities : MonoBehaviour
 
     private void Start()
     {
-        if (Camera == null)
-        {
-            Camera = GetComponent<Camera>();
-        }
         SetRes();
         QualitySettings.vSyncCount = 0; // Set vSyncCount to 0 so that using .targetFrameRate is enabled.
         Application.targetFrameRate = 60;
@@ -41,20 +37,28 @@ public class CameraUtilities : MonoBehaviour
 
     private void SetRes()
     {
-        current_h = Screen.height;
-        Camera.fieldOfView = Camera.HorizontalToVerticalFieldOfView(target_fov, Camera.aspect);
+        CurrentHeight = Screen.height;
+        Camera.fieldOfView = Camera.HorizontalToVerticalFieldOfView(TargetFOV, Camera.aspect);
         if (Screen.width != 0)
         {
-            int CalculatedHeight = (Screen.height * BaseWidth) / Screen.width;
+            int CalculatedHeight = Screen.height * BaseWidth / Screen.width;
             ECResolutionChange.Invoke(CalculatedHeight);
-        }        
+        }
     }
 #if UNITY_EDITOR
-    void Update()
+    private void Update()
     {
-        if (Screen.height != current_h)
+        if (Screen.height != CurrentHeight)
         {
             SetRes();
+        }
+    }
+
+    private void OnValidate()
+    {
+        if (Camera == null)
+        {
+            Camera = GetComponent<Camera>();
         }
     }
 #endif

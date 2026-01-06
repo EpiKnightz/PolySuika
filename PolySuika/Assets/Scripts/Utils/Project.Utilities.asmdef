@@ -1,0 +1,17 @@
+{
+    "name": "Utilities",
+    "rootNamespace": "",
+    "references": [
+        "GUID:8dad643a6f276e24fba36f9807e5ccd4",
+        "GUID:a4843d813daadef42b82a2de209584ff"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
