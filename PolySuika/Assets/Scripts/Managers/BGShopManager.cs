@@ -1,72 +1,89 @@
-using UnityEngine;
 using Lean.Pool;
 using PrimeTween;
 using Sortify;
-using Reflex.Attributes;
+using UnityEngine;
 
 public class BGShopManager : MonoBehaviour
 {
-    // Dependencies
-    [Inject] private readonly IDataManager DataManager;
+    [Header("References")]
+    [SerializeField] private Transform BGShopParent;
 
     [BetterHeader("Variables")]
     public Vector3 MainPosition = Vector3.zero;
-    public Vector3 RightSpawnPosition = new(50, 0, 0);
+    public float RightSpawnPosition = 60f;
     public float AnimDuration = 1f;
 
     [BetterHeader("Listen To")]
-    public IntEventChannelSO ECOnCurrentLevelSetChangedOffset;
+    public IntEventChannelSO ECOnSetIndexOffset;
+    public LevelSetEventChannelSO ECOnLevelSetChange;
 
     // Private
     private Transform CurrentBGShop;
     private Transform OldBGShop;
-
-    void Start()
-    {
-        SpawnDefaultBGShop();
-    }
+    private float AnimDirection = 0;
 
     private void OnEnable()
     {
-        ECOnCurrentLevelSetChangedOffset.Sub(ChangeBackgroundShop);
+        ECOnSetIndexOffset.Sub(ChangeAnimDirection);
+        ECOnLevelSetChange.Sub(ChangeBackgroundShop);
     }
 
     private void OnDisable()
     {
-        ECOnCurrentLevelSetChangedOffset.Unsub(ChangeBackgroundShop);
+        ECOnSetIndexOffset.Unsub(ChangeAnimDirection);
+        ECOnLevelSetChange.Unsub(ChangeBackgroundShop);
     }
 
-    void ChangeBackgroundShop(int offset)
+    private void ChangeAnimDirection(int offset)
     {
-        var shopPrefab = DataManager.GetCurrentShopBG();
-        if (shopPrefab != null
-            && CurrentBGShop != null)
+        AnimDirection = RightSpawnPosition * offset;
+    }
+
+
+    private void ChangeBackgroundShop(LevelSet setData)
+    {
+        if (CurrentBGShop != null)
         {
             OldBGShop = CurrentBGShop;
-            CurrentBGShop = LeanPool.Spawn(shopPrefab, RightSpawnPosition * offset, Quaternion.identity).transform;
+            SpawnBGShop(setData.ShopPrefab, Vector3.right * AnimDirection);
             OldBGShop.gameObject.SetActive(true);
             CurrentBGShop.gameObject.SetActive(true);
-            Tween.PositionX(OldBGShop, RightSpawnPosition.x * (-offset), AnimDuration, Ease.OutBack);
+            Tween.PositionX(OldBGShop, -AnimDirection, AnimDuration, Ease.OutBack);
             Tween.PositionX(CurrentBGShop, 0, AnimDuration, Ease.OutBack);
             Tween.Delay(AnimDuration, DeactiveOldShop);
         }
+        else if (AnimDirection == 0)
+        {
+            SpawnBGShop(setData.ShopPrefab, Vector3.zero);
+        }
     }
 
-    void DeactiveOldShop()
+    private void DeactiveOldShop()
     {
         // Careful to call Despawn twice here - it will cause the GameObject to be destroyed
-        if (OldBGShop.gameObject.activeInHierarchy)
+        if (OldBGShop != null
+            && OldBGShop.gameObject.activeInHierarchy)
         {
             LeanPool.Despawn(OldBGShop.gameObject);
+            OldBGShop = null;
         }
     }
 
-    void SpawnDefaultBGShop()
+    private void SpawnBGShop(GameObject shopPrefab, Vector3 offset, int offsetIndex = 0)
     {
-        var shopPrefab = DataManager.GetCurrentShopBG();
         if (shopPrefab != null)
         {
-            CurrentBGShop = LeanPool.Spawn(shopPrefab, Vector3.zero, Quaternion.identity).transform;
+            CurrentBGShop = LeanPool.Spawn(shopPrefab, offset, Quaternion.identity, BGShopParent).transform;
         }
     }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (BGShopParent == null)
+        {
+            BGShopParent = transform;
+        }
+    }
+#endif
 }

@@ -1,6 +1,6 @@
-using UnityEngine;
 using FMODUnity;
 using Sortify;
+using UnityEngine;
 
 [RequireComponent(typeof(StudioEventEmitter))]
 public class MusicManager : MonoBehaviour
@@ -9,19 +9,19 @@ public class MusicManager : MonoBehaviour
     public StudioEventEmitter EventEmitter;
 
     [BetterHeader("Listen To")]
-    public IntEventChannelSO ECOnSetChange;
+    public IntEventChannelSO ECOnSetIndexChange;
 
     private void OnEnable()
     {
-        ECOnSetChange.Sub(OnSetChange);
+        ECOnSetIndexChange.Sub(OnSetChange);
     }
 
     private void OnDisable()
     {
-        ECOnSetChange.Unsub(OnSetChange);
+        ECOnSetIndexChange.Unsub(OnSetChange);
     }
 
-    void OnSetChange(int newIndex)
+    private void OnSetChange(int newIndex)
     {
         EventEmitter.SetParameter("Track", newIndex);
     }

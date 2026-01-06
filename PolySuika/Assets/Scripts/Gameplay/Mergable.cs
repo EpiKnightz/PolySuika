@@ -12,6 +12,9 @@ public class Mergable : MonoBehaviour
     [SerializeField] private Collider Collider;
     [SerializeField] private Renderer Renderer;
 
+    [Header("Variable")]
+    [SerializeField] private string ImpactedTag;
+
     private int Tier = 0;
     private bool isMerging = false;
     private bool isImpacted = false;
@@ -64,11 +67,21 @@ public class Mergable : MonoBehaviour
         isImpacted = imp;
         if (isImpacted)
         {
+            gameObject.tag = ImpactedTag.ToString();
             EOnImpact?.Invoke(this);
+        }
+        else
+        {
+            gameObject.tag = "Untagged";
         }
     }
     public bool IsImpacted() { return isImpacted; }
     public bool IsMerging() { return isMerging; }
+
+    public void SetMass(float mass)
+    {
+        Rigidbody.mass = mass;
+    }
 
     public void SetIsMerging(bool merging)
     {
@@ -81,14 +94,21 @@ public class Mergable : MonoBehaviour
 
     private void OnEnable()
     {
-        isMerging = false;
-        isImpacted = false;
+        SetIsMerging(false);
+        SetImpacted(false);
     }
 
     private void OnDisable()
     {
         Tween.StopAll(transform);
         EOnDisable?.Invoke(this);
+        EOnImpact = null;
+        EOnMerging = null;
+    }
+
+    private void Awake()
+    {
+        Rigidbody.centerOfMass = Vector3.zero;
     }
 
 #if UNITY_EDITOR
@@ -100,6 +120,7 @@ public class Mergable : MonoBehaviour
             Collider = GetComponent<Collider>();
         if (Renderer == null)
             Renderer = GetComponent<Renderer>();
+        ImpactedTag ??= "Impacted";
     }
 #endif
 }

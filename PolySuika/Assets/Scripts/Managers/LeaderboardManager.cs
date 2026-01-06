@@ -1,10 +1,10 @@
 using Reflex.Attributes;
-using UnityEngine;
-using Sortify;
 using Reflex.Core;
+using Sortify;
+using UnityEngine;
 
 public class LeaderboardManager : MonoBehaviour, ILeaderboardManager, IInstaller
-{    
+{
     // Dependencies
     [Inject] private readonly ISaveManager SaveManager;
 
@@ -37,6 +37,11 @@ public class LeaderboardManager : MonoBehaviour, ILeaderboardManager, IInstaller
         ECOnLeaderboardButtonTriggered.Unsub(UpdateLeaderboardFromDisk);
     }
 
+    private void Start()
+    {
+        UpdateLeaderboardFromDisk();
+    }
+
     public void UpdateLeaderboardFromDisk()
     {
         if (IsUpdated)
@@ -56,7 +61,7 @@ public class LeaderboardManager : MonoBehaviour, ILeaderboardManager, IInstaller
     }
 
     public bool CheckLeaderboardEligable(int score)
-    { 
+    {
         return CurrentLeaderboard.CompareLast(score);
     }
 

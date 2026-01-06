@@ -1,21 +1,17 @@
 using Lean.Pool;
 using PrimeTween;
-using Reflex.Attributes;
-using Reflex.Core;
 using Sortify;
 using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-public class TierManager : MonoBehaviour, ITierManager, IInstaller
+public class TierManager : MonoBehaviour
 {
-    // Dependencies
-    [Inject] private readonly IDataManager DataManager;
-
     [BetterHeader("Spawn Settings")]
     public int MaxSpawnableTier = 2;
     public int TierUpMergeCount = 5;
     public float CooldownTime = 1f;
+    public Transform OffsetTransform;
     public float MinSpawnHeight = 2f;
     public float MaxSpawnHeight = 2.5f;
     public float RandomSpawnAngle = 90f;
@@ -37,31 +33,23 @@ public class TierManager : MonoBehaviour, ITierManager, IInstaller
 
     [BetterHeader("Listen To")]
     public VoidEventChannelSO ECActionButtonTriggered;
-    public VoidEventChannelSO ECOnRestartTriggered = null;
+    public VoidEventChannelSO ECOnRestartTriggered;
     public IntEventChannelSO ECOnSetChange;
     public VoidEventChannelSO ECOnLoseTrigger;
+    public LevelSetEventChannelSO ECOnLevelSetChange;
 
     // Privates
-    private float lastSpawnTime = 0;
-    private float scaleIncrement = 0.35f;
+    private float LastSpawnTime = 0;
+    private float ScaleIncrement = 0.35f;
     private GameObject[] TierPrefabs;
-    private float baseScale = 1f;
-    private Mergable spawnedTransform;
-    private Mergable cachedTransform;
-    private int chosenTier = -1;
+    private float BaseScale = 1f;
+    private Mergable NextMergable;
     private HashSet<Mergable> CurrentMergableList = new();
     private HashSet<GameObject> CurrentRefList = new();
-    private int currentMaxTier = 0;
-    private int currentMergeCount = 0;
-    private bool bIsLevelDirty = true;
-    private bool bIsGameEnd = false;
-    private const float PHYSIC_WAIT_TIME = 0.001f;
-
-
-    public void InstallBindings(ContainerBuilder builder)
-    {
-        builder.AddSingleton(this, typeof(ITierManager));
-    }
+    private int CurrentMaxTier = 0;
+    private int CurrentMergeCount = 0;
+    private bool IsLevelDirty = true;
+    private bool IsGameEnd = false;
 
     private void OnEnable()
     {
@@ -69,6 +57,7 @@ public class TierManager : MonoBehaviour, ITierManager, IInstaller
         ECOnSetChange.Sub(OnCurrentSetChanged);
         ECOnRestartTriggered.Sub(ClearBoard);
         ECOnLoseTrigger.Sub(OnGameEnd);
+        ECOnLevelSetChange.Sub(UpdateTierPrefabs);
     }
 
     private void OnDisable()
@@ -77,36 +66,34 @@ public class TierManager : MonoBehaviour, ITierManager, IInstaller
         ECOnSetChange.Unsub(OnCurrentSetChanged);
         ECOnRestartTriggered.Unsub(ClearBoard);
         ECOnLoseTrigger.Unsub(OnGameEnd);
+        ECOnLevelSetChange.Unsub(UpdateTierPrefabs);
     }
 
     private void OnCurrentSetChanged(int newIdx)
     {
-        if (CurrentMergableList.Count > 0)
+        if (!IsLevelDirty)
         {
             // Send Restart event
-            bIsLevelDirty = true;
+            IsLevelDirty = true;
             ReturnTierRefs();
-            // Manually trigger restart to clear the board
-            ECOnRestartTriggered.Invoke();
         }
     }
 
     private void OnActionTriggered()
     {
-        if (bIsLevelDirty)
+        if (IsLevelDirty)
         {
-            UpdateTierPrefabs();
             SpawnNext();
             SpawnReferences();
-            bIsLevelDirty = false;
+            IsLevelDirty = false;
         }
     }
 
-    private void UpdateTierPrefabs()
+    private void UpdateTierPrefabs(LevelSet levelSet)
     {
-        TierPrefabs = DataManager.GetCurrentTierPrefabs();
-        baseScale = DataManager.GetCurrentBaseScale();
-        scaleIncrement = DataManager.GetCurrentScaleIncrement();
+        TierPrefabs = levelSet.TierPrefabs;
+        BaseScale = levelSet.BaseScale;
+        ScaleIncrement = levelSet.ScaleIncrement;
     }
 
     public int GetMaxTier()
@@ -117,25 +104,18 @@ public class TierManager : MonoBehaviour, ITierManager, IInstaller
     // Spawn and show as preview
     private void SpawnNext()
     {
-        chosenTier = Random.Range(0, currentMaxTier + 1);
+        var rndTier = Random.Range(0, CurrentMaxTier + 1);
 
-        if (TierPrefabs[chosenTier] != null)
+        if (TierPrefabs[rndTier] != null)
         {
-            var clone = SpawnAdvance(chosenTier, SpawnNextPosition, false, false);
+            var clone = SpawnAdvance(rndTier, SpawnNextPosition + OffsetTransform.position, false, false);
             if (clone.TryGetComponent<Mergable>(out var mergable))
             {
-                if (spawnedTransform == null)
-                {
-                    spawnedTransform = mergable;
-                }
-                else
-                {
-                    cachedTransform = mergable;
-                }
+                NextMergable = mergable;
                 mergable.EnablePhysic(false);
                 mergable.EnableShadow(false);
             }
-            float scaleFactor = baseScale * SpawnNextScaleMultiplier;
+            float scaleFactor = BaseScale * SpawnNextScaleMultiplier;
             clone.transform.localScale = new Vector3(scaleFactor, scaleFactor, scaleFactor);
             clone.SetActive(true);
         }
@@ -143,77 +123,67 @@ public class TierManager : MonoBehaviour, ITierManager, IInstaller
 
     public void OnClick(Vector3 offsetPosition)
     {
-        if (bIsGameEnd
-            || spawnedTransform == null
-            || Time.timeSinceLevelLoad - lastSpawnTime < CooldownTime)
+        if (IsGameEnd
+            || NextMergable == null
+            || Time.timeSinceLevelLoad - LastSpawnTime < CooldownTime)
         {
             return;
         }
-        else
-        {
-            lastSpawnTime = Time.timeSinceLevelLoad;
-        }
-        offsetPosition.y = Mathf.Clamp(offsetPosition.y, MinSpawnHeight, MaxSpawnHeight);
-        spawnedTransform.transform.SetPositionAndRotation(offsetPosition,
-            spawnedTransform.transform.rotation);
-        spawnedTransform.EnableShadow(true);
+        LastSpawnTime = Time.timeSinceLevelLoad;
 
-        PoppingUp(spawnedTransform.gameObject, chosenTier);
+        offsetPosition.y = Mathf.Clamp(offsetPosition.y, OffsetTransform.position.y + MinSpawnHeight, OffsetTransform.position.y + MaxSpawnHeight);
+        NextMergable.transform.SetParent(null);
+        NextMergable.transform.position = offsetPosition;
+        NextMergable.EnableShadow(true);
+        NextMergable.EnablePhysic(true);
+        CurrentMergableList.Add(NextMergable);
+
+        PoppingUp(NextMergable.gameObject, NextMergable.GetTier());
         SpawnNext();
-        Tween.Delay(PHYSIC_WAIT_TIME, ResetPhysic);
     }
 
-    private void ResetPhysic()
+    public GameObject SpawnAdvance(int tier, Vector3 offsetPosition, bool isMerged = true, bool usePrefabZ = true)
     {
-        spawnedTransform.EnablePhysic(true);
-
-        spawnedTransform = cachedTransform;
-        cachedTransform = null;
-    }
-
-    public GameObject SpawnAdvance(int Tier, Vector3 offsetPosition, bool isMerged = true, bool usePrefabZ = true)
-    {
-        var finalPosition = TierPrefabs[Tier].transform.position + offsetPosition;
+        var finalPosition = TierPrefabs[tier].transform.position + offsetPosition;
         if (usePrefabZ)
         {
-            finalPosition.z = TierPrefabs[Tier].transform.position.z + BaseSpawnPosition.z;
+            finalPosition.z = TierPrefabs[tier].transform.position.z + BaseSpawnPosition.z;
         }
 
         Vector3 eulerRotation = Vector3.zero;
         float RandomAngle = Random.Range(-RandomSpawnAngle, RandomSpawnAngle);
-        var rigidbody = TierPrefabs[Tier].GetComponent<Rigidbody>();
-        if ((rigidbody.constraints & RigidbodyConstraints.FreezeRotationZ)
-            != RigidbodyConstraints.FreezeRotationZ)
+        if (TierPrefabs[tier].TryGetComponent<Rigidbody>(out var rigidbody))
         {
-            eulerRotation.z = RandomAngle;
+            if ((rigidbody.constraints & RigidbodyConstraints.FreezeRotationZ)
+                != RigidbodyConstraints.FreezeRotationZ)
+            {
+                eulerRotation.z = RandomAngle;
+            }
+            else if ((rigidbody.constraints & RigidbodyConstraints.FreezeRotationX)
+                != RigidbodyConstraints.FreezeRotationX)
+            {
+                eulerRotation.x = RandomAngle;
+            }
+            else
+            {
+                eulerRotation.y = RandomAngle;
+            }
         }
-        else if ((rigidbody.constraints & RigidbodyConstraints.FreezeRotationX)
-            != RigidbodyConstraints.FreezeRotationX)
-        {
-            eulerRotation.x = RandomAngle;
-        }
-        else
-        {
-            eulerRotation.y = RandomAngle;
-        }
-        var finalRotation = TierPrefabs[Tier].transform.rotation * Quaternion.Euler(eulerRotation);
-        GameObject NewObject = LeanPool.Spawn(TierPrefabs[Tier],
-                                    finalPosition,
-                                    finalRotation);
-        var newRigid = NewObject.GetComponent<Rigidbody>();
-        newRigid.mass = 1 + (Tier * MassIncrement);
-        Mergable NewMergable = NewObject.GetComponent<Mergable>();
-        NewMergable.SetTier(Tier);
-        NewMergable.DRequestMerging.Reg(ProcessMergingRequest);
-        CurrentMergableList.Add(NewMergable);
+        var finalRotation = TierPrefabs[tier].transform.rotation * Quaternion.Euler(eulerRotation);
+        var newObject = isMerged ? LeanPool.Spawn(TierPrefabs[tier], finalPosition, finalRotation)
+                                    : LeanPool.Spawn(TierPrefabs[tier], finalPosition, finalRotation, OffsetTransform);
+        Mergable newMergable = newObject.GetComponent<Mergable>();
+        newMergable.SetTier(tier);
+        newMergable.SetMass(1 + (tier * MassIncrement));
+        newMergable.DRequestMerging.Reg(ProcessMergingRequest);
         if (isMerged)
         {
-            PoppingUp(NewObject, Tier);
-            // HAX: Popup = true mean this is coming from a merge
-            NewMergable.SetImpacted(true);
-            NewMergable.EnablePhysic(true);
+            PoppingUp(newObject, tier);
+            newMergable.SetImpacted(true);
+            newMergable.EnablePhysic(true);
+            CurrentMergableList.Add(newMergable);
         }
-        return NewObject;
+        return newObject;
     }
 
     private void ProcessMergingRequest(Mergable first, Mergable second)
@@ -238,19 +208,19 @@ public class TierManager : MonoBehaviour, ITierManager, IInstaller
         ReturnMergable(second);
     }
 
-    private void IncreaseMergeCount(int Tier)
+    private void IncreaseMergeCount(int tier)
     {
-        currentMergeCount++;
-        if (currentMergeCount % TierUpMergeCount == 0
-            && currentMaxTier < MaxSpawnableTier)
+        CurrentMergeCount++;
+        if (CurrentMergeCount % TierUpMergeCount == 0
+            && CurrentMaxTier < MaxSpawnableTier)
         {
-            currentMaxTier++;
+            CurrentMaxTier++;
         }
     }
 
-    private void OnMergeEvent(int Tier)
+    private void OnMergeEvent(int tier)
     {
-        ECOnMergeEvent.Invoke(Tier);
+        ECOnMergeEvent.Invoke(tier);
     }
 
     private void OnMergePosition(Vector3 pos)
@@ -260,21 +230,20 @@ public class TierManager : MonoBehaviour, ITierManager, IInstaller
 
     public void ResetTier()
     {
-        currentMaxTier = 0;
-        currentMergeCount = 0;
-        lastSpawnTime = 0;
-        spawnedTransform = null;
-        cachedTransform = null;
-        bIsGameEnd = false;
+        CurrentMaxTier = 0;
+        CurrentMergeCount = 0;
+        LastSpawnTime = 0;
+        NextMergable = null;
+        IsGameEnd = false;
     }
 
-    public void PoppingUp(GameObject Object, int Tier)
+    public void PoppingUp(GameObject gameObj, int tier)
     {
-        Object.transform.localScale = new Vector3(PopUpStartScale, PopUpStartScale, PopUpStartScale);
+        gameObj.transform.localScale = new Vector3(PopUpStartScale, PopUpStartScale, PopUpStartScale);
         // Use tween to ramp up the scale of the object to their tier size
-        Tween.Scale(Object.transform,
-            baseScale + (Tier * scaleIncrement * baseScale),
-            0.75f + (Tier * TimeIncrement),
+        Tween.Scale(gameObj.transform,
+            BaseScale + (tier * ScaleIncrement * BaseScale),
+            0.75f + (tier * TimeIncrement),
             ease: Ease.OutCirc);
     }
 
@@ -290,19 +259,18 @@ public class TierManager : MonoBehaviour, ITierManager, IInstaller
             var offsetPos = new Vector3(minX + (i * XSpacing), SpawnRefMinMax.y, SpawnRefMinMax.z);
             var finalPosition = TierPrefabs[i].transform.position + offsetPos;
             var finalRotation = TierPrefabs[i].transform.rotation;
-            GameObject NewObject = Instantiate(TierPrefabs[i],
+            GameObject newObject = Instantiate(TierPrefabs[i],
                                         finalPosition,
-                                        finalRotation);
-            if (NewObject.TryGetComponent<Mergable>(out var mergable))
+                                        finalRotation, OffsetTransform);
+            if (newObject.TryGetComponent<Mergable>(out var mergable))
             {
                 mergable.EnablePhysic(false);
                 mergable.EnableShadow(false);
                 mergable.enabled = false;
             }
-            NewObject.transform.localScale = 0.5f * baseScale * Vector3.one;
-            NewObject.layer = 0;
-            NewObject.transform.SetParent(transform, true);
-            CurrentRefList.Add(NewObject);
+            newObject.transform.localScale = 0.5f * BaseScale * Vector3.one;
+            newObject.layer = 0;
+            CurrentRefList.Add(newObject);
         }
     }
 
@@ -315,8 +283,13 @@ public class TierManager : MonoBehaviour, ITierManager, IInstaller
             Destroy(script.gameObject);
         }
         CurrentMergableList.Clear();
+        if (NextMergable != null)
+        {
+            LeanPool.Detach(NextMergable);
+            Destroy(NextMergable.gameObject);
+        }
         ResetTier();
-        if (!bIsLevelDirty)
+        if (!IsLevelDirty)
         {
             SpawnNext();
         }
@@ -343,6 +316,6 @@ public class TierManager : MonoBehaviour, ITierManager, IInstaller
 
     private void OnGameEnd()
     {
-        bIsGameEnd = true;
+        IsGameEnd = true;
     }
 }
