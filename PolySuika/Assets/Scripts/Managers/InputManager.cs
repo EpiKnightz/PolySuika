@@ -8,10 +8,10 @@ public class InputManager : MonoBehaviour
     public LeanFingerTap LeanTapScript;
 
     [BetterHeader("Listen To")]
-    public VoidEventChannelSO ECHomeButtonTriggered;
+    public VoidEventChannelSO ECActionHidden;
     public VoidEventChannelSO ECOnActionAnimFinished;
 
-    void Start()
+    private void Start()
     {
         OnEnableGameplay(false);
     }
@@ -19,16 +19,16 @@ public class InputManager : MonoBehaviour
     private void OnEnable()
     {
         ECOnActionAnimFinished.Sub(OnActionPhaseStart);
-        ECHomeButtonTriggered.Sub(OnActionPhaseEnd);
+        ECActionHidden.Sub(OnActionPhaseEnd);
     }
 
     private void OnDisable()
     {
         ECOnActionAnimFinished.Unsub(OnActionPhaseStart);
-        ECHomeButtonTriggered.Unsub(OnActionPhaseEnd);
+        ECActionHidden.Unsub(OnActionPhaseEnd);
     }
 
-    void OnEnableGameplay(bool bIsEnable)
+    private void OnEnableGameplay(bool bIsEnable)
     {
         if (LeanTapScript != null)
         {
@@ -36,13 +36,13 @@ public class InputManager : MonoBehaviour
         }
     }
 
-    void OnActionPhaseStart()
+    private void OnActionPhaseStart()
     {
         OnEnableGameplay(true);
         // Additional input enabling can be added here
     }
 
-    void OnActionPhaseEnd()
+    private void OnActionPhaseEnd()
     {
         OnEnableGameplay(false);
     }
