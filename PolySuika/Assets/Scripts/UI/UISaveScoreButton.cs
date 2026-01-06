@@ -1,15 +1,15 @@
 using PrimeTween;
+using Reflex.Attributes;
 using Sortify;
 using TMPro;
 using UnityEngine;
-using Reflex.Attributes;
 
 [RequireComponent(typeof(RectTransform))]
 public class UISaveScoreButton : MonoBehaviour
 {
     // Dependencies
-    [Inject] readonly ILeaderboardManager LeaderboardManager;
-    [Inject] readonly IUIManager UIManager;
+    [Inject] private readonly ILeaderboardManager LeaderboardManager;
+    [Inject] private readonly IUIManager UIManager;
 
     [Header("References")]
     [SerializeField] private TMP_InputField UITextInput;
@@ -29,7 +29,7 @@ public class UISaveScoreButton : MonoBehaviour
     private void Start()
     {
         gameObject.SetActive(false);
-        UITextInput.gameObject.SetActive(false);        
+        UITextInput.gameObject.SetActive(false);
     }
 
     private void Awake()
@@ -53,14 +53,14 @@ public class UISaveScoreButton : MonoBehaviour
             gameObject.SetActive(true);
             FinalScore = score;
             ThisRectTransform.localScale = Vector3.one * (1 - HighlightScaleChanges);
-            Tween.Scale(ThisRectTransform, (1 + HighlightScaleChanges), HighlightDuration, Ease.InOutSine, -1, CycleMode.Yoyo);
+            Tween.Scale(ThisRectTransform, 1 + HighlightScaleChanges, HighlightDuration, Ease.InOutSine, -1, CycleMode.Yoyo);
         }
     }
 
     public void OnSaveScoreClicked()
     {
         Tween.StopAll(ThisRectTransform);
-        ThisRectTransform.localScale = Vector3.one;        
+        ThisRectTransform.localScale = Vector3.one;
         UITextInput.gameObject.SetActive(true);
         var rectTransform = UITextInput.GetComponent<RectTransform>();
         rectTransform.localScale = new Vector3(0.001f, 0.001f, rectTransform.localScale.z);
@@ -69,7 +69,7 @@ public class UISaveScoreButton : MonoBehaviour
         Tween.LocalPositionY(rectTransform, 0, 0.5f, Ease.OutBack);
     }
 
-    void OnTextInputAnimFinished()
+    private void OnTextInputAnimFinished()
     {
         UITextInput.ActivateInputField();
     }
@@ -84,13 +84,14 @@ public class UISaveScoreButton : MonoBehaviour
             LeaderboardManager.AddLeaderboardEntry(newEntry);
             UIManager.SwitchActivePanel(PanelType.Leaderboard, true);
             FinalScore = 0;
-        }else
+        }
+        else
         {
             UITextInput.ActivateInputField();
         }
     }
 
-    void ResetSaveScore()
+    private void ResetSaveScore()
     {
         UITextInput.text = "";
         UITextInput.gameObject.SetActive(false);

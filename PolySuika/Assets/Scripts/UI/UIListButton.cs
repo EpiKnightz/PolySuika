@@ -5,25 +5,26 @@ public class UIListButton : UIToggle
 {
     [Header("References")]
     public RectTransform ListButton;
-    public RectTransform RestartButton;
-    public RectTransform HomeButton;
+    public RectTransform[] ListItems;
+    //public RectTransform HomeButton;
 
     [Header("Listen To")]
     public VoidEventChannelSO[] ECOnTriggerHideList;
-    public IntEventChannelSO ECOnFinalScore;
+    public IntEventChannelSO ECOnTriggerShowList;
 
     // Privates
-    private Vector3 DesiredRestartPos;
-    private Vector3 DesiredHomePos;
+    private Vector3[] DesiredItemsPos;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Awake()
+    private void Awake()
     {
         UIStateEnable = false;
-        DesiredRestartPos = RestartButton.position - ListButton.position;
-        DesiredHomePos = HomeButton.position - ListButton.position;
-        RestartButton.position = ListButton.position;
-        HomeButton.position = ListButton.position;
+        DesiredItemsPos = new Vector3[ListItems.Length];
+        for (int i = 0; i < ListItems.Length; i++)
+        {
+            DesiredItemsPos[i] = ListItems[i].localPosition - ListButton.localPosition;
+            ListItems[i].localPosition = ListButton.localPosition;
+        }
     }
 
     private void OnEnable()
@@ -32,7 +33,7 @@ public class UIListButton : UIToggle
         {
             ECOnTriggerHideList[i].Sub(HideList);
         }
-        ECOnFinalScore.Sub(OnFinalScore);
+        ECOnTriggerShowList.Sub(OnFinalScore);
     }
 
     private void OnDisable()
@@ -41,10 +42,10 @@ public class UIListButton : UIToggle
         {
             ECOnTriggerHideList[i].Unsub(HideList);
         }
-        ECOnFinalScore.Unsub(OnFinalScore);
+        ECOnTriggerShowList.Unsub(OnFinalScore);
     }
 
-    void HideList()
+    private void HideList()
     {
         if (UIStateEnable)
         {
@@ -52,7 +53,7 @@ public class UIListButton : UIToggle
         }
     }
 
-    void OnFinalScore(int Score)
+    private void OnFinalScore(int Score)
     {
         if (!UIStateEnable)
         {
@@ -63,14 +64,18 @@ public class UIListButton : UIToggle
     public override void EnableVisual()
     {
         // Show buttons
-        Tween.Position(RestartButton, ListButton.position + DesiredRestartPos, 0.25f, ease: Ease.InOutSine);
-        Tween.Position(HomeButton, ListButton.position + DesiredHomePos, 0.25f, ease: Ease.InOutSine);
+        for (int i = 0; i < ListItems.Length; i++)
+        {
+            Tween.LocalPosition(ListItems[i], ListButton.localPosition + DesiredItemsPos[i], 0.25f, ease: Ease.InOutSine);
+        }
     }
 
     public override void DisableVisual()
     {
         // Hide buttons
-        Tween.Position(RestartButton, ListButton.position, 0.25f, ease: Ease.InOutSine);
-        Tween.Position(HomeButton, ListButton.position, 0.25f, ease: Ease.InOutSine);
+        for (int i = 0; i < ListItems.Length; i++)
+        {
+            Tween.LocalPosition(ListItems[i], ListButton.localPosition, 0.25f, ease: Ease.InOutSine);
+        }
     }
 }

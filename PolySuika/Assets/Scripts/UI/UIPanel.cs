@@ -1,13 +1,10 @@
 ﻿using Sortify;
 using UnityEngine;
-using Reflex.Attributes;
+using UnityEngine.Events;
 
 [RequireComponent(typeof(RectTransform))]
 public class UIPanel : MonoBehaviour
 {
-    // Dependencies
-    [Inject] private readonly IUIManager UIManager;
-
     [SerializeField] private RectTransform PanelTransform;
     [SerializeField] private PanelType MenuPanelType;
     [SerializeField] private float CameraPos;
@@ -15,20 +12,26 @@ public class UIPanel : MonoBehaviour
     [BetterHeader("Broadcast On")]
     public VoidEventChannelSO ECOnClickTriggered = null;
     public VoidEventChannelSO ECOnChangePanelAnimFinished = null;
+    public VoidEventChannelSO ECOnPanelHidden = null;
 
-    private void Awake()
-    {
-        if (PanelTransform == null)
-        {
-            PanelTransform = GetComponent<RectTransform>();
-        }
-    }
+    public UnityAction<PanelType, bool> EOnSwitchPanelTriggered;
 
     public void OnClick()
     {
-        UIManager.SwitchActivePanel(MenuPanelType, true);
+        EOnSwitchPanelTriggered?.Invoke(MenuPanelType, true);
+    }
+
+    public void InvokeSwitchPanelTriggered()
+    {
         ECOnClickTriggered?.Invoke();
-        UIManager.EOnAnimFinished.AddListener((MenuPanelType) => ECOnChangePanelAnimFinished?.Invoke());
+    }
+
+    public void InvokeAnimFinished(PanelType activePanelType)
+    {
+        if (activePanelType == MenuPanelType)
+        {
+            ECOnChangePanelAnimFinished?.Invoke();
+        }
     }
 
     public bool IsSameType(PanelType panelType)
@@ -46,6 +49,7 @@ public class UIPanel : MonoBehaviour
         if (activePanelType != MenuPanelType)
         {
             EnablePanel(false);
+            ECOnPanelHidden?.Invoke();
         }
     }
 
@@ -57,5 +61,13 @@ public class UIPanel : MonoBehaviour
     public float GetCameraPos()
     {
         return CameraPos;
+    }
+
+    private void OnValidate()
+    {
+        if (PanelTransform == null)
+        {
+            PanelTransform = GetComponent<RectTransform>();
+        }
     }
 }

@@ -3,7 +3,6 @@ using Reflex.Core;
 using Sortify;
 using UnityEngine;
 using UnityEngine.Events;
-using WanzyeeStudio;
 public enum PanelType
 {
     Menu,
@@ -17,13 +16,11 @@ public class UIManager : MonoBehaviour, IUIManager, IInstaller
     [Header("References")]
     public UIPanel[] PanelArray;
     public Transform Camera;
-     
+
     [BetterHeader("Variables")]
     public float AnimDuration = 3f;
 
-    public UnityEvent<PanelType> EOnAnimFinished => _EOnAnimFinished;
-    private UnityEvent<PanelType> _EOnAnimFinished = new();
-
+    public UnityEvent<PanelType> EOnAnimFinished { get; } = new();
     private PanelType CurrentActivePanel = PanelType.Menu;
 
     public void InstallBindings(ContainerBuilder containerBuilder)
@@ -31,9 +28,21 @@ public class UIManager : MonoBehaviour, IUIManager, IInstaller
         containerBuilder.AddSingleton(this, typeof(IUIManager));
     }
 
-    void Start()
+    private void Start()
     {
+        foreach (var panel in PanelArray)
+        {
+            panel.EOnSwitchPanelTriggered += SwitchActivePanel;
+        }
         SwitchActivePanel(PanelType.Menu);
+    }
+
+    private void OnDestroy()
+    {
+        foreach (var panel in PanelArray)
+        {
+            panel.EOnSwitchPanelTriggered -= SwitchActivePanel;
+        }
     }
 
     public void SwitchActivePanel(PanelType activePanel, bool IsAnimate = false)
@@ -52,10 +61,13 @@ public class UIManager : MonoBehaviour, IUIManager, IInstaller
         {
             if (PanelArray[i].IsSameType(CurrentActivePanel))
             {
+                // Show the active panel and animate
+                PanelArray[i].InvokeSwitchPanelTriggered();
                 PanelArray[i].ShowUIPanel();
                 if (IsAnimate)
                 {
                     AnimateUI(PanelArray[i].GetCameraPos());
+                    EOnAnimFinished.AddListener(PanelArray[i].InvokeAnimFinished);
                 }
                 else
                 {
@@ -64,6 +76,7 @@ public class UIManager : MonoBehaviour, IUIManager, IInstaller
             }
             else
             {
+                // Hide other panels after animation
                 if (IsAnimate)
                 {
                     EOnAnimFinished.AddListener(PanelArray[i].HideUIPanel);
@@ -76,15 +89,23 @@ public class UIManager : MonoBehaviour, IUIManager, IInstaller
         }
     }
 
-    private Tween AnimateUI(float PositionY)
+    private Tween AnimateUI(float posY, float duration = -1)
     {
-        return Tween.PositionY(Camera, PositionY, AnimDuration, ease: Ease.InOutSine)
-                                .OnComplete(() => _EOnAnimFinished?.Invoke(CurrentActivePanel));
+        if (duration == -1)
+        {
+            duration = AnimDuration;
+        }
+        return Tween.LocalPositionY(Camera, posY, duration, ease: Ease.InOutSine)
+                                .OnComplete(() => EOnAnimFinished?.Invoke(CurrentActivePanel));
     }
 
-    private void SetCameraPos(float PositionY)
+    private void SetCameraPos(float posY)
     {
-        Camera.SetPositionAndRotation(new Vector3(Camera.position.x, PositionY, Camera.position.z),
-                                        Camera.rotation);
+        Camera.localPosition = new Vector3(Camera.localPosition.x, posY, Camera.localPosition.z);
+    }
+
+    public PanelType GetCurrentActivePanel()
+    {
+        return CurrentActivePanel;
     }
 }

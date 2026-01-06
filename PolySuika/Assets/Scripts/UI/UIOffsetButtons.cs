@@ -1,22 +1,22 @@
-using UnityEngine;
 using PrimeTween;
 using Sortify;
+using UnityEngine;
 
-public class UIChangeSetButtons : MonoBehaviour
+public class UIOffsetButtons : MonoBehaviour
 {
     public float ButtonClickCooldown = 1;
-    
+
     [BetterHeader("Broadcast On")]
-    public IntEventChannelSO ECOnChangeSetOffsetTriggered = null;
+    public IntEventChannelSO ECOnChangeOffsetTriggered = null;
 
     // Private
     private bool ClickEnable = true;
 
-    public  void OnClick(int Offset)
+    public void OnClick(int Offset)
     {
         if (ClickEnable)
         {
-            ECOnChangeSetOffsetTriggered.Invoke(Offset);
+            ECOnChangeOffsetTriggered.Invoke(Offset);
             ClickEnable = false;
             Tween.Delay(ButtonClickCooldown, EnableClick);
         }
@@ -24,6 +24,6 @@ public class UIChangeSetButtons : MonoBehaviour
 
     public void EnableClick()
     {
-        ClickEnable = true; 
+        ClickEnable = true;
     }
 }

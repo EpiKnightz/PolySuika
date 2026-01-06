@@ -1,7 +1,5 @@
-using Sortify;
 using TMPro;
 using UnityEngine;
-using WanzyeeStudio;
 
 public class UIEndGameText : MonoBehaviour
 {
@@ -22,6 +20,11 @@ public class UIEndGameText : MonoBehaviour
     {
         ECOnRestartTriggered.Unsub(ResetText);
         ECOnLoseTrigger.Unsub(Lose);
+    }
+
+    private void Awake()
+    {
+        textMesh.enabled = false;
     }
 
     private void Win()
