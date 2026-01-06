@@ -1,15 +1,18 @@
-using Reflex.Core;
 using Sortify;
 using UnityEngine;
+using Utilities;
 
-public class DataManager : MonoBehaviour, IInstaller, IDataManager
+
+public class LevelSetManager : MonoBehaviour
 {
     [Header("Variables")]
     [SerializeField] private LevelSet[] LevelSets;
 
     [BetterHeader("Broadcast On")]
-    public IntEventChannelSO ECOnSetChange = null;
-    public IntEventChannelSO ECOnCurrentLevelSetChangedOffset = null;
+    public IntEventChannelSO ECOnSetIndexOffset = null;
+    public IntEventChannelSO ECOnSetIndexChange = null;
+    public LevelSetEventChannelSO ECOnLevelSetChange = null;
+    public VoidEventChannelSO ECOnRestartTriggered = null;
 
     [BetterHeader("Listen To")]
     public IntEventChannelSO ECOnChangeSetOffsetTriggered;
@@ -17,17 +20,17 @@ public class DataManager : MonoBehaviour, IInstaller, IDataManager
     // Private
     private int CurrentLevelSetIndex = 0;
 
-    public void InstallBindings(ContainerBuilder builder)
+    private void Start()
     {
-        builder.AddSingleton(this, typeof(IDataManager));
+        OffsetCurrentLevelSet(0);
     }
 
-    void OnEnable()
+    private void OnEnable()
     {
         ECOnChangeSetOffsetTriggered.Sub(OffsetCurrentLevelSet);
     }
 
-    void OnDisable()
+    private void OnDisable()
     {
         ECOnChangeSetOffsetTriggered.Unsub(OffsetCurrentLevelSet);
     }
@@ -54,21 +57,20 @@ public class DataManager : MonoBehaviour, IInstaller, IDataManager
 
     public void OffsetCurrentLevelSet(int offset)
     {
-        CurrentLevelSetIndex += offset;
-        if (CurrentLevelSetIndex >= LevelSets.Length)
-        {
-            CurrentLevelSetIndex = 0;
-        }
-        if (CurrentLevelSetIndex < 0)
-        {
-            CurrentLevelSetIndex = LevelSets.Length - 1;
-        }
-        ECOnSetChange.Invoke(CurrentLevelSetIndex);
-        ECOnCurrentLevelSetChangedOffset.Invoke(offset);
+        ECOnSetIndexOffset.Invoke(offset);
+        CurrentLevelSetIndex = ListUtilities.RepeatIndex(CurrentLevelSetIndex + offset, LevelSets);
+        ECOnSetIndexChange.Invoke(CurrentLevelSetIndex);
+        ECOnLevelSetChange.Invoke(LevelSets[CurrentLevelSetIndex]);
+        ECOnRestartTriggered.Invoke();
     }
 
-    public GameObject GetCurrentShopBG()
+    public GameObject GetCurrentShopBG(int offset = 0)
     {
+        if (offset != 0)
+        {
+            int newIndex = ListUtilities.RepeatIndex(CurrentLevelSetIndex + offset, LevelSets);
+            return LevelSets[newIndex].ShopPrefab;
+        }
         return LevelSets[CurrentLevelSetIndex].ShopPrefab;
     }
 }
