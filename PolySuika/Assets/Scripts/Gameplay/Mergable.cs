@@ -28,7 +28,10 @@ public class Mergable : MonoBehaviour
     {
         if (!isImpacted)
         {
-            SetImpacted(true);
+            if (collision.gameObject.layer != LayerMask.NameToLayer("Ignore Raycast"))
+            {
+                SetImpacted(true);
+            }
         }
         if (collision.gameObject.layer != gameObject.layer
             || isMerging)
