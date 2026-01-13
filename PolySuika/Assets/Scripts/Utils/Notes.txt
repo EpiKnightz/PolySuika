@@ -1,0 +1,88 @@
+TO-DO: Day3
+v Add VFX
+v Add SFX
+v Add Camera Shake
+
+TO-DO: Day4
+v Add Music
+v Add Outline effect with post processing
+v Score Manager
+
+TO-DO: Day5
+v Multiplier apply to score
+v Camera scaler according to resolution
+v Add Music
+v Add Outline effect with post processing
+v Settings up builds
+
+TO-DO: Day6
+Scriptable Object for
+  v LevelSet
+  GameSettings -> use playerpref instead for faster iteration as it's very simple
+Local Leaderboard
+Add Menus: 
+  v Play Button
+  v List Buttons
+  p Restart Button
+  p Leaderboard Button
+
+    //TO-DO: Day7 (& a few more wishlist)
+v Local Leaderboard
+Restart the game
+Scale/Anchor of World Space button in different resolution
+w Extra: Make mergables poolable
+UI Element/Image HDR Material
+w Change set
+
+TO-DO: Day8
+v Local Leaderboard flow
+v Restart the game
+
+TO-DO: Day11
+Change BG shop based on selected set
+Add new Christmas set
+
+TO-DO: Day18
+New game mode: Endless mode: merge as much as you can, forever
+
+Side works:
+v Cloud Displacement shader
+v Vibration on mobile (only slightly)
+
+Add new set check list:
+- Central pivot
+
+Day 20/21
+v Optimization the shit out of the game
+v Turn off bloom & HDR -> rework on all the material and colors in the game
+v Use hard shadow only
+v Turn off screen space ambient occlusion as it doesn't do much for the current view of the game
+(Tested with blue noise and it's... okay, it doesn't suit the style of the game)
+v Use the same root material and keywords for SRP batching
+v Use Realtime light only since lightmap doesn't affect many objects and it break batching (because using different keywords)
+v Enable and use Dynamic Batching on eligible material
+
+Day 22
+v Polish & optimize UI
+v Disable UI when not needed
+v NOTE: Invisible UI still make a draw call which is a waste. Remember to disable when not needed
+
+Day 26
+v New Mode: Minimal! Reach the highest tier of object with the lowest amount of leftover as possible, for more bonus point
+v New Set: Sports
+v Optimize materials for all the set, changing them to URP Simple Lit
+
+Day 27
+v Find music for sport
+v Find asset for the cutie set
+v Optimize Christmas back ground mesh
+v Optimize unneccessary post processing
+
+Day 28
+v New set: Cutie!
+v Music & background set + optimization for the set
+v Optimize physics in some area
+
+Day 29
+v New mode: Timer! Merge as fast as you can, and leave as much objects in the end as you can for bonus point!
+v Refactor code for a little bit easier control

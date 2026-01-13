@@ -33,28 +33,30 @@ namespace Utilities
         public const int EXTREME_SCORE = (int)ScoreMilestone.EXTREME;
         public const int ULTIMATE_SCORE = (int)ScoreMilestone.ULTIMATE;
 
+        public const int CLEAR_FINISHED_VALUE = -1;
+
         public static Dictionary<int, string> ColorDict = new()
         {
-                {0, "052B98" },
-                {1, "007A98" },
-                {2, "067A00" },
-                {3, "919800" },
-                {4, "AD4500" },
-                {5, "982100" },
-                {6, "930098" },
-                {7, "2700FF" },
+                {0, "001FFF" },
+                {1, "44A8A8" },
+                {2, "55D25A" },
+                {3, "AEB000" },
+                {4, "CD6A29" },
+                {5, "FF4040" },
+                {6, "B32D9A" },
+                {7, "5229A5" },
                 {8, "AAAAAA" }
             };
         public static Dictionary<ScoreMilestone, string> ScoreMilestoneColor = new()
         {
-                { ScoreMilestone.NICE, "052B98" },
-                { ScoreMilestone.GOOD, "007A98" },
-                { ScoreMilestone.GREAT, "067A00" },
-                { ScoreMilestone.SUPER, "919800" },
-                { ScoreMilestone.UNREAL, "AD4500" },
-                { ScoreMilestone.INSANE, "982100" },
-                { ScoreMilestone.MAGICAL, "930098" },
-                { ScoreMilestone.EXTREME, "2700FF" },
+                { ScoreMilestone.NICE, "001FFF" },
+                { ScoreMilestone.GOOD, "44A8A8" },
+                { ScoreMilestone.GREAT, "55D25A" },
+                { ScoreMilestone.SUPER, "AEB000" },
+                { ScoreMilestone.UNREAL, "CD6A29" },
+                { ScoreMilestone.INSANE, "FF4040" },
+                { ScoreMilestone.MAGICAL, "B32D9A" },
+                { ScoreMilestone.EXTREME, "5229A5" },
                 { ScoreMilestone.ULTIMATE, "AAAAAA" }
             };
     }
@@ -96,72 +98,4 @@ namespace Utilities
             : index;
         }
     }
-
-    // Music CC:
-    // Alex McCulloch chill-guitar >< chill-chiptune
-
-    //TO-DO: Day3
-    // v Add VFX
-    // v Add SFX
-    // v Add Camera Shake
-
-    //TO-DO: Day4
-    // v Add Music
-    // v Add Outline effect with post processing
-    // v Score Manager
-
-    //TO-DO: Day5
-    // v Multiplier apply to score
-    // v Camera scaler according to resolution
-    // v Add Music
-    // v Add Outline effect with post processing
-    // v Settings up builds
-
-    //TO-DO: Day6
-    // Scriptable Object for
-    //   v LevelSet
-    //   GameSettings
-    // Local Leaderboard
-    // Add Menus: 
-    //   v Play Button
-    //   v List Buttons
-    //   p Restart Button
-    //   p Leaderboard Button
-
-    //TO-DO: Day7 (& a few more wishlist)
-    // v Local Leaderboard
-    // Restart the game
-    // Scale/Anchor of World Space button in different resolution
-    // w Extra: Make mergables poolable
-    // UI Element/Image HDR Material
-    // w Change set
-
-    // TO-DO: Day8
-    // v Local Leaderboard flow
-    // v Restart the game
-
-    // TO-DO: Day11
-    // Change BG shop based on selected set
-    // Add new Christmas set
-
-    // TO-DO: Day18
-    // New game mode: Endless mode
-
-    // Side works:
-    // v Cloud Displacement shader
-    // v Vibration on mobile (only slightly)
-
-    // Add new set check list:
-    // - Collider and Renderer on main object
-    // - Central pivot
-    // - Location 0,0,1 -> to be rework
-    // - Layer = Mergables
-    // - Add rigid body
-    // - Add Mergable script
-
-    // Day 21
-    // Optimization
-
-    // Day 22
-    // Polish UI
 }

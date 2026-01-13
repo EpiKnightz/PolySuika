@@ -7,6 +7,7 @@ public class CameraUtilities : MonoBehaviour
 {
     [BetterHeader("Variables")]
     [SerializeField] private float TargetFOV = 14.2f;
+    [SerializeField] private int TargetFPS = 56;
 
     [BetterHeader("Broadcast On")]
     public IntEventChannelSO ECResolutionChange = null;
@@ -32,7 +33,7 @@ public class CameraUtilities : MonoBehaviour
     {
         SetRes();
         QualitySettings.vSyncCount = 0; // Set vSyncCount to 0 so that using .targetFrameRate is enabled.
-        Application.targetFrameRate = 60;
+        Application.targetFrameRate = TargetFPS;
     }
 
     private void SetRes()
