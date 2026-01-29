@@ -5,7 +5,7 @@ using UnityEngine.Events;
 public class EventChannelSO<T> : ScriptableObject
 {
     private UnityAction<T> EOnEvent;
-    
+
     public void Invoke(T arg)
     {
         EOnEvent?.Invoke(arg);

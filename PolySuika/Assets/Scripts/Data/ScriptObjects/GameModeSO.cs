@@ -1,11 +1,13 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "GameModeSO", menuName = "Scriptable Objects/GameModeSO")]
+[CreateAssetMenu(fileName = "GameModeSO", menuName = "Data/GameModeSO")]
 public class GameModeSO : ScriptableObject
 {
     [SerializeField] private string ModeName;
     [SerializeField] private GameObject CheckPrefab;
     [SerializeField] private Sprite Icon;
+    [Header("Unique & Once")]
+    [SerializeField] private int ID;
 
     public string GetModeName()
     {
@@ -20,5 +22,10 @@ public class GameModeSO : ScriptableObject
     public Sprite GetIcon()
     {
         return Icon;
+    }
+
+    public int GetID()
+    {
+        return ID;
     }
 }

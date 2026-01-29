@@ -1,7 +1,5 @@
 using System;
-using UnityEngine;
 using System.Collections.Generic;
-using System.Linq;
 
 [Serializable]
 public struct Entry : IComparable<Entry>
@@ -43,7 +41,7 @@ public struct Entry : IComparable<Entry>
 [Serializable]
 public class Leaderboard
 {
-    const int MAX_ENTRIES_COUNT = 10;
+    private const int MAX_ENTRIES_COUNT = 10;
     public List<Entry> entries = new();
 
     public void Add(Entry entry)
@@ -58,7 +56,7 @@ public class Leaderboard
 
     public void Add(string name, int score)
     {
-        Entry entry = new Entry(name, score);
+        Entry entry = new(name, score);
         Add(entry);
     }
 
@@ -70,15 +68,11 @@ public class Leaderboard
 
     public bool CompareLast(int score)
     {
-        if (entries.Count < MAX_ENTRIES_COUNT)
-        {
-            return true;
-        }
-        return score > entries[entries.Count - 1].Score;
+        return entries.Count < MAX_ENTRIES_COUNT || score > entries[entries.Count - 1].Score;
     }
 
     public void Clear()
     {
-        entries.Clear(); 
+        entries.Clear();
     }
 }

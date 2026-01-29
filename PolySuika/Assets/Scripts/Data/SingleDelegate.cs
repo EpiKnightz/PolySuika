@@ -1,13 +1,23 @@
 using UnityEngine;
 using UnityEngine.Events;
 
+// Single Delegate restrict to one event added at a time
 public class SingleDelegate
 {
     private UnityAction EOnEvent;
 
     public void Invoke()
     {
-        EOnEvent.Invoke();
+        if (EOnEvent != null)
+        {
+            EOnEvent.Invoke();
+        }
+#if UNITY_EDITOR        
+        else
+        {           
+            Debug.LogWarning("SingleDelegate: No delegate registered to invoke " + GetType());
+        }
+#endif        
     }
 
     public bool Reg(UnityAction action, bool forceReplace = false)
@@ -37,7 +47,16 @@ public class SingleDelegate<T>
 
     public void Invoke(T arg)
     {
-        EOnEvent.Invoke(arg);
+        if (EOnEvent != null)
+        {
+            EOnEvent.Invoke(arg);
+        }
+#if UNITY_EDITOR        
+        else
+        {           
+            Debug.LogWarning("SingleDelegate: No delegate registered to invoke " + GetType());
+        }
+#endif
     }
 
     public bool Reg(UnityAction<T> action, bool forceReplace = false)
@@ -71,10 +90,12 @@ public class SingleDelegate<T0, T1>
         {
             EOnEvent.Invoke(arg0, arg1);
         }
+#if UNITY_EDITOR
         else
-        {
+        {     
             Debug.LogWarning("SingleDelegate: No delegate registered to invoke " + GetType());
         }
+#endif
     }
 
     public bool Reg(UnityAction<T0, T1> action, bool forceReplace = false)
