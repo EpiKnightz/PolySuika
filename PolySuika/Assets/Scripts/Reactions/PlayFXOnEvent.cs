@@ -1,19 +1,24 @@
-using Sortify;
 using UnityEngine;
 
 public class PlayFXOnEvent<T> : MonoBehaviour
 {
-    [BetterHeader("Listen To")]
-    public EventChannelSO<T> ECOnMergeTriggered;
+    [Header("Listen To")]
+    public EventChannelSO<T>[] ECOnEventTriggered;
 
     private void OnEnable()
     {
-        ECOnMergeTriggered.Sub(OnMergeTriggered);
+        for (int i = 0; i < ECOnEventTriggered.Length; i++)
+        {
+            ECOnEventTriggered[i].Sub(OnMergeTriggered);
+        }
     }
 
     private void OnDisable()
     {
-        ECOnMergeTriggered.Unsub(OnMergeTriggered);
+        for (int i = 0; i < ECOnEventTriggered.Length; i++)
+        {
+            ECOnEventTriggered[i].Unsub(OnMergeTriggered);
+        }
     }
 
     protected virtual void OnMergeTriggered(T value) { }

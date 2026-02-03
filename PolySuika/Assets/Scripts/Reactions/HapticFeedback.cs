@@ -1,6 +1,4 @@
 using Solo.MOST_IN_ONE;
-using Sortify;
-using UnityEngine;
 using Utilities;
 
 public class HapticFeedback : PlayFXOnEvent<int>
