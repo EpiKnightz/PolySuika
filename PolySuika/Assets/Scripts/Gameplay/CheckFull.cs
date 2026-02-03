@@ -2,14 +2,17 @@ using PrimeTween;
 using Sortify;
 using UnityEngine;
 
+[RequireComponent(typeof(Collider))]
 public class CheckFull : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private MeshRenderer warningMesh;
+    [SerializeField] private MeshRenderer WarningMesh;
+    [SerializeField] private Collider ThisCollider;
 
     [BetterHeader("Variables")]
     [SerializeField] private LayerMask MergableLayerMask;
-    [SerializeField] private float maxCountdown = 5f;
+    [SerializeField] private float MaxCountdown = 5f;
+    [SerializeField] private float DoubleCheckInterval = 1.01f;
 
     [BetterHeader("Broadcast On")]
     public VoidEventChannelSO ECOnLoseTrigger;
@@ -17,25 +20,29 @@ public class CheckFull : MonoBehaviour
     [BetterHeader("Listen To")]
     public VoidEventChannelSO ECOnRestartTriggered;
 
-    private Material warningMaterial;
-    private Tween warningTween;
-    private bool bIsCountdown = false;
-    private float currentCountdown = 0f;
+    private Material WarningMaterial;
+    private Tween WarningTween;
+    private bool IsCountdown = false;
+    private float CurrentCountdown = 0f;
+    private float CurrentCheckInterval = 0f;
+    private Vector3 Radius;
+    private Collider[] ColliderBuffer = new Collider[1];
 
-    private void Start()
+    private void Awake()
     {
-        warningMaterial = warningMesh.material;
-        warningMaterial.SetFloat("_Alpha", 0);
+        WarningMaterial = WarningMesh.material;
+        Radius = transform.localScale / 2f;
     }
 
     private void OnEnable()
     {
-        ECOnRestartTriggered.Sub(ResetCountdown);
+        ECOnRestartTriggered.Sub(RestartCheck);
+        RestartCheck();
     }
 
     private void OnDisable()
     {
-        ECOnRestartTriggered.Unsub(ResetCountdown);
+        ECOnRestartTriggered.Unsub(RestartCheck);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -58,7 +65,7 @@ public class CheckFull : MonoBehaviour
     {
         if (other.TryGetComponent<Mergable>(out var mergable))
         {
-            RayCheck();
+            //RayCheck();
             mergable.EOnImpact -= CheckOnImpact;
             mergable.EOnDisable -= CheckOnDisable;
         }
@@ -79,9 +86,8 @@ public class CheckFull : MonoBehaviour
     private bool RayCheck()
     {
         // Need to check if there are still mergables inside the trigger
-        Collider[] colliders = Physics.OverlapBox(transform.position, transform.localScale / 2f,
-                                                    transform.rotation, MergableLayerMask);
-        if (colliders.Length == 0)
+        if (Physics.OverlapBoxNonAlloc(transform.position, Radius, ColliderBuffer,
+                                                    transform.rotation, MergableLayerMask) == 0)
         {
             // Stop countdown
             ResetCountdown();
@@ -96,43 +102,77 @@ public class CheckFull : MonoBehaviour
 
     private void StartCountdown()
     {
-        if (!bIsCountdown)
+        if (!IsCountdown)
         {
             // Start countdown
-            bIsCountdown = true;
-            warningTween = Tween.Custom(1, 0, duration: 0.5f, ease: Ease.InOutSine, cycles: -1, cycleMode: CycleMode.Yoyo
-                , onValueChange: newVal => { if (bIsCountdown) warningMaterial.SetFloat("_Alpha", newVal); });
+            IsCountdown = true;
+            WarningMesh.gameObject.SetActive(true);
+            WarningTween = Tween.Custom(1, 0, duration: 0.5f, ease: Ease.InOutSine, cycles: -1, cycleMode: CycleMode.Yoyo
+                , onValueChange: newVal =>
+                {
+                    WarningMaterial.color = new Color(WarningMaterial.color.r,
+                                                        WarningMaterial.color.g,
+                                                        WarningMaterial.color.b,
+                                                        newVal);
+                });
         }
+    }
+
+    private void RestartCheck()
+    {
+        ThisCollider.enabled = true;
+        ResetCountdown();
     }
 
     private void ResetCountdown()
     {
-        bIsCountdown = false;
-        currentCountdown = 0f;
-
+        IsCountdown = false;
+        CurrentCountdown = 0f;
+        CurrentCheckInterval = 0f;
         ResetLine();
     }
 
     private void ResetLine()
     {
-        warningMaterial.SetFloat("_Alpha", 0);
-        warningTween.Stop();
+        WarningMaterial.color = new Color(WarningMaterial.color.r,
+                                    WarningMaterial.color.g,
+                                    WarningMaterial.color.b,
+                                    0);
+        WarningTween.Stop();
+        WarningMesh.gameObject.SetActive(false);
     }
 
     private void Update()
     {
-        if (bIsCountdown)
+        if (IsCountdown)
         {
-            currentCountdown += Time.deltaTime;
-            if (currentCountdown > maxCountdown)
+            CurrentCountdown += Time.deltaTime;
+            CurrentCheckInterval += Time.deltaTime;
+            if (CurrentCountdown > MaxCountdown)
             {
                 // Double check one final time
                 if (RayCheck())
                 {
                     ECOnLoseTrigger.Invoke();
                     ResetCountdown();
+                    ThisCollider.enabled = false;
                 }
             }
+            else if (CurrentCheckInterval > DoubleCheckInterval)
+            {
+                RayCheck();
+                CurrentCheckInterval = 0;
+            }
+
         }
     }
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (ThisCollider == null)
+        {
+            ThisCollider = GetComponent<Collider>();
+        }
+    }
+#endif
 }

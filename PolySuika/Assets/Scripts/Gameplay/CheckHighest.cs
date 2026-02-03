@@ -8,7 +8,6 @@ public class CheckHighest : MonoBehaviour
     [SerializeField] private string ImpactedTag;
     [SerializeField] private float CheckInterval = 10f;
 
-
     [BetterHeader("Broadcast On")]
     public FloatEventChannelSO ECOnTriggerOffsetWorldY;
 
@@ -19,6 +18,13 @@ public class CheckHighest : MonoBehaviour
 
     // Privates
     private float CurrentCheckCountdown = -1;
+    private Vector3 Radius;
+    private Collider[] ColliderBuffer = new Collider[10];
+
+    private void Awake()
+    {
+        Radius = transform.localScale / 2f;
+    }
 
     private void OnEnable()
     {
@@ -47,35 +53,33 @@ public class CheckHighest : MonoBehaviour
     {
         StartCooldown();
         float offsetAmount = RayCheck();
-        if (offsetAmount > 0)
-        {
-            ECOnTriggerOffsetWorldY.Invoke(offsetAmount);
-        }
+        //if (offsetAmount > 0)
+        //{
+        ECOnTriggerOffsetWorldY.Invoke(offsetAmount);
+        //}
     }
 
     private float RayCheck()
     {
-        float radiusY = transform.localScale.y / 2f;
         // Need to check if there are still mergables inside the trigger
-        Collider[] colliders = Physics.OverlapBox(transform.position, transform.localScale / 2f,
+        int size = Physics.OverlapBoxNonAlloc(transform.position, Radius, ColliderBuffer,
                                                     transform.rotation, MergableLayerMask);
-        if (colliders.Length > 0)
+        if (size > 0)
         {
             // Find the highest point, calculate amount of down needed, then broadcast it
             float highestPoint = 0;
-            foreach (var collider in colliders)
+            for (int i = 0; i < size; i++)
             {
-                if (collider.gameObject.CompareTag(ImpactedTag))
+                if (ColliderBuffer[i].gameObject.CompareTag(ImpactedTag))
                 {
-                    float colliderTop = collider.bounds.max.y;
+                    float colliderTop = ColliderBuffer[i].bounds.max.y;
                     if (colliderTop > highestPoint)
                     {
                         highestPoint = colliderTop;
                     }
                 }
             }
-
-            return highestPoint - transform.position.y + radiusY;
+            return highestPoint + Radius.y - transform.position.y;
         }
         return 0;
     }
@@ -106,7 +110,6 @@ public class CheckHighest : MonoBehaviour
     private void OnValidate()
     {
         ImpactedTag ??= "Impacted";
-        MergableLayerMask = LayerMask.GetMask("Mergables");
     }
 #endif
 }
