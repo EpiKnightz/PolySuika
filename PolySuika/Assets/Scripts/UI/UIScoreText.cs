@@ -9,6 +9,9 @@ public class UIScoreText : MonoBehaviour
     [Header("References")]
     public TextMeshPro ScoreText;
 
+    [Header("Variables")]
+    [SerializeField] private string BreakGameText = "You broke the game!";
+
     [BetterHeader("Listen To")]
     public IntEventChannelSO ECOnScoreTotalChange;
     public IntEventChannelSO ECOnCurrentScorePreTotal;
@@ -31,20 +34,32 @@ public class UIScoreText : MonoBehaviour
 
     public void UpdateTotalScore(int score)
     {
+        if (score == 0)
+        {
+            ScoreText.text = string.Empty;
+            return;
+        }
+        else if (score < 0)
+        {
+            Tween.StopAll(ScoreText.rectTransform);
+            ScoreText.text = BreakGameText;
+            return;
+        }
+
         OldScore = NewScore;
         NewScore = score;
         NextMilestone = GConst.NICE_SCORE;
         string formatText = score.ToString();
         int ScorePower = Mathf.Clamp(score / 50, 0, 7);
-        float scaleFactor = 1.35f + 0.075f * ScorePower;
-        float duration = 0.1f + ScorePower * 0.025f;
+        float scaleFactor = 1.35f + (0.075f * ScorePower);
+        float duration = 0.1f + (ScorePower * 0.025f);
         Tween.StopAll(ScoreText.rectTransform);
         ResetSize();
         Tween.Scale(ScoreText.rectTransform, Vector3.one * scaleFactor, duration, cycleMode: CycleMode.Yoyo, cycles: 2, ease: Ease.InOutBack)
             .OnComplete(ResetSize);
         Tween.Custom(OldScore, NewScore, duration, val =>
         {
-            string interimText = Mathf.FloorToInt(val).ToString();
+            string interimText = Mathf.FloorToInt(val).ToString("#,#");
             ScoreText.text = "Score: " + interimText;
         });
         // There is potential for tween end early and score not final here
@@ -57,13 +72,13 @@ public class UIScoreText : MonoBehaviour
             ScoreText.text = ScoreToText(score);
             Tween.StopAll(ScoreText.rectTransform);
             ResetSize();
-            Tween.Scale(ScoreText.rectTransform, Vector3.one * 1.4f, 0.25f, cycleMode: CycleMode.Yoyo, 
+            Tween.Scale(ScoreText.rectTransform, Vector3.one * 1.4f, 0.25f, cycleMode: CycleMode.Yoyo,
                 cycles: NextMilestone > GConst.ULTIMATE_SCORE ? -1 : 2, ease: Ease.InOutBack)
                 .OnComplete(ResetSize);
         }
     }
 
-    string ScoreToText(int score)
+    private string ScoreToText(int score)
     {
         if (score < GConst.GOOD_SCORE)
         {
@@ -95,7 +110,7 @@ public class UIScoreText : MonoBehaviour
         {
             NextMilestone = GConst.MAGICAL_SCORE;
             return TextUtilities.ScoreMilestoneToColoredText(ScoreMilestone.INSANE);
-        }       
+        }
         else if (score < GConst.EXTREME_SCORE)
         {
             NextMilestone = GConst.EXTREME_SCORE;
@@ -112,7 +127,7 @@ public class UIScoreText : MonoBehaviour
             NextMilestone = int.MaxValue;
             //return "<color=#0029A1>U</color><color=#007A98>L</color><color=#069800>T</color><color=#919800>I</color><color=#AD4500>M</color><color=#982100>A</color><color=#930098>T</color><color=#2700FF>E</color><color=#AAAAAA>!</color>";
             return TextUtilities.RainbowString(ScoreMilestone.ULTIMATE.ToString() + "!");
-        }        
+        }
     }
 
     public void ResetSize()

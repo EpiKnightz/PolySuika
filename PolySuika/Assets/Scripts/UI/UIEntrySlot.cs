@@ -17,18 +17,19 @@ public class UIEntry : MonoBehaviour
             {
                 NameField.SetText(TextUtilities.RainbowString(entry.NickName));
             }
-            else if ( Rank == 1)
+            else if (Rank == 1)
             {
                 NameField.SetText(TextUtilities.RankToColoredText(5, entry.NickName));
             }
             else if (Rank == 2)
             {
                 NameField.SetText(TextUtilities.RankToColoredText(4, entry.NickName));
-            }else
+            }
+            else
             {
                 NameField.SetText(entry.NickName);
             }
-            ScoreField.SetText(entry.Score.ToString()); // To formatted string later
+            ScoreField.SetText(entry.Score.ToString("#,#")); // To formatted string later
             RankField.SetText((Rank + 1).ToString());
         }
     }
