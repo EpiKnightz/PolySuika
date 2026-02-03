@@ -1,6 +1,5 @@
 using Sortify;
 using UnityEngine;
-using Utilities;
 
 public class UIButton : MonoBehaviour
 {
@@ -10,5 +9,16 @@ public class UIButton : MonoBehaviour
     public virtual void OnClick()
     {
         ECOnClick.Invoke();
+    }
+}
+
+public class UIButton<T> : MonoBehaviour
+{
+    [BetterHeader("Broadcast On")]
+    public EventChannelSO<T> ECOnClick = null;
+
+    public virtual void OnClick(T value)
+    {
+        ECOnClick.Invoke(value);
     }
 }
