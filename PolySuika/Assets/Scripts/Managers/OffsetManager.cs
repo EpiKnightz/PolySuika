@@ -8,14 +8,18 @@ public class OffsetManager : MonoBehaviour
     public float OffsetSpeed = 0.0225f;
     public float ResetDuration = 0.35f;
     public float SpeedFactor = 1.2f;
+    public float MinSpeedMulti = 0.1f;
+    public float MaxSpeedMulti = 50f;
     public float SpeedPower = 5f;
+
+    [BetterHeader("Broadcast On")]
+    public FloatEventChannelSO ECOnOffsetWorldYUpdated;
 
     [BetterHeader("Listen To")]
     public FloatEventChannelSO ECOnTriggerOffsetWorldY;
     public VoidEventChannelSO ECOnRestartTriggered;
 
     // Privates
-    private float WorldOffsetY = 0f;
 
     private void OnEnable()
     {
@@ -31,26 +35,35 @@ public class OffsetManager : MonoBehaviour
 
     public float GetWorldOffsetY()
     {
-        return WorldOffsetY;
+        return transform.position.y;
     }
 
     public void SetWorldOffsetY(float offsetY)
     {
-        WorldOffsetY = offsetY;
         Tween.StopAll(transform);
-        float nextPoint = transform.position.y + offsetY;
-        float speedMulti = Mathf.Pow(SpeedFactor, Mathf.FloorToInt(offsetY * SpeedPower));
-        float duration = offsetY / (OffsetSpeed * speedMulti);
-        //Debug.Log("OffsetManager: Setting World Offset Y to " + offsetY + " over duration " + duration + " with speed factor " + speedMulti);
-        Tween.PositionY(transform, nextPoint, duration, ease: Ease.InOutSine);
+        if (offsetY > 0)
+        {
+            //WorldOffsetY = offsetY;
+            float WorldOffsetY = transform.position.y + offsetY;
+            float speedMulti = Mathf.Clamp(Mathf.Pow(SpeedFactor, Mathf.FloorToInt(offsetY * SpeedPower)), MinSpeedMulti, MaxSpeedMulti);
+            float duration = offsetY / (OffsetSpeed * speedMulti);
+            //Debug.Log("OffsetManager: Setting World Offset Y to " + offsetY + " over duration " + duration + " with speed factor " + speedMulti);
+            Tween.PositionY(transform, WorldOffsetY, duration, ease: Ease.InOutSine).OnUpdate(target: this, (target, tween) => target.InvokeOffsetEvent());
+        }
     }
+
+    private void InvokeOffsetEvent()
+    {
+        ECOnOffsetWorldYUpdated?.Invoke(GetWorldOffsetY());
+    }
+
     private void ResetWorldOffsetY()
     {
         Tween.StopAll(transform);
-        if (WorldOffsetY > 0)
+        if (GetWorldOffsetY() > 0)
         {
-            Tween.PositionY(transform, 0, ResetDuration, ease: Ease.InOutSine);
-            WorldOffsetY = 0f;
+            Tween.PositionY(transform, 0, ResetDuration, ease: Ease.OutSine);
+            InvokeOffsetEvent();
         }
     }
 }
