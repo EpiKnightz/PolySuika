@@ -7,7 +7,8 @@ public enum PanelType
 {
     Menu,
     Action,
-    Leaderboard
+    Leaderboard,
+    Credit,
 }
 // Responsible for enabling/disabling panels
 // Scaling of world space UI based on resolution
