@@ -1,2 +1,15 @@
 fileFormatVersion: 2
 guid: e9cbfd22328ad9e4ab8c60fd518994a0
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - EnableToggle: {instanceID: 0}
+  - DisableToggle: {instanceID: 0}
+  - TargetImage: {instanceID: 0}
+  - ECOnGameStart: {fileID: 11400000, guid: 54cfdf467ee76da4988adea4c689fb3d, type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

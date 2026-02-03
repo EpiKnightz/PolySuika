@@ -1,38 +1,41 @@
-using UnityEngine;
-using UnityEngine.UI;
 using FMODUnity;
+using Reflex.Attributes;
 using Sortify;
+using UnityEngine;
 
 public class UIFModBusToggle : UIToggle
 {
-    [Header("References")]
-    [SerializeField] private Sprite EnableToggle;
-    [SerializeField] private Sprite DisableToggle;
-    [SerializeField] private Image TargetImage;
+    [Inject] private readonly IPref PrefManager;
 
-    [BetterHeader("Variables")]
+    [Header("Variables")]
     [SerializeField] private string BusName;
+    [SerializeField] private string SaveKey;
 
-    public override void DisableVisual()
+    private void OnEnable()
     {
-        if (TargetImage != null
-            && DisableToggle != null)
+        if (RuntimeManager.HaveAllBanksLoaded
+            && RuntimeManager.GetBus(BusName).getMute(out bool mute) == FMOD.RESULT.OK)
         {
-            TargetImage.sprite = DisableToggle;
+            if (mute == UIStateEnable)
+            {
+                OnClick();
+            }
         }
     }
 
-    public override void EnableVisual()
+    public override void ToggleAction(bool enable)
     {
-        if (TargetImage != null
-            && EnableToggle != null)
-        {
-            TargetImage.sprite = EnableToggle;
-        }
-    }
-
-    public override void ToggleAction(bool enable) 
-    {
+        PrefManager.SaveInt(SaveKey, enable ? 0 : 1);
         RuntimeManager.GetBus(BusName).setMute(!enable);
     }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (string.IsNullOrEmpty(SaveKey))
+        {
+            SaveKey = BusName[5..];
+        }
+    }
+#endif
 }
