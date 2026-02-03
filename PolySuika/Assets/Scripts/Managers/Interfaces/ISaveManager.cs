@@ -1,5 +1,5 @@
 ﻿public interface ISaveManager
 {
-    T Load<T>();
-    void Save<T>(T data);
+    bool TryLoad<T>(out T result, string suffix = "");
+    bool Save<T>(T data, string suffix = "");
 }
