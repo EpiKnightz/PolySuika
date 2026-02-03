@@ -1,6 +1,6 @@
+using Sortify;
 using UnityEngine;
 using Utilities;
-using Sortify;
 
 public class ScoreManager : MonoBehaviour
 {
@@ -8,8 +8,8 @@ public class ScoreManager : MonoBehaviour
     public IntEventChannelSO ECOnCurrentScoreChange = null;
     public IntEventChannelSO ECOnScoreMultiChange = null;
     public Int2EventChannelSO ECOnCurrentScoreAndMultiChange = null;
-    public IntEventChannelSO ECOnCurrentScorePreTotal = null;    
-    public FloatEventChannelSO ECOnComboTimeChange = null;            
+    public IntEventChannelSO ECOnCurrentScorePreTotal = null;
+    public FloatEventChannelSO ECOnComboTimeChange = null;
     public VoidEventChannelSO ECOnComboEnd = null;
     public IntEventChannelSO ECOnScoreTotalChange = null;
     public IntEventChannelSO ECOnFinalScore = null;
@@ -23,9 +23,11 @@ public class ScoreManager : MonoBehaviour
     private int CurrentScore = 0;
     private int ScoreMultiplier = 0;
     public float ComboDuration = 3f;
-    private int Combo = 0;   
+    private int Combo = 0;
     private float CurrentComboTime = 0f;
     private bool bIsFinalCombo = false;
+
+    private const int COMBO_RESET_VALUE = -10;
 
     private void OnEnable()
     {
@@ -50,7 +52,7 @@ public class ScoreManager : MonoBehaviour
         RefreshCombo();
     }
 
-    void RefreshCombo()
+    private void RefreshCombo()
     {
         if (CurrentComboTime > 0)
         {
@@ -75,22 +77,23 @@ public class ScoreManager : MonoBehaviour
         {
             CurrentComboTime -= Time.deltaTime;
             ECOnComboTimeChange.Invoke(CurrentComboTime / ComboDuration);
-        } else if (CurrentComboTime != -1)
+        }
+        else if (CurrentComboTime != COMBO_RESET_VALUE)
         {
-            CurrentComboTime = -1;
+            CurrentComboTime = COMBO_RESET_VALUE;
             ECOnComboTimeChange.Invoke(0f);
             OnComboEnd();
         }
     }
 
-    void OnComboEnd()
+    private void OnComboEnd()
     {
         TotalScore += CurrentScore * ScoreMultiplier;
         CurrentScore = 0;
         ScoreMultiplier = 0;
         Combo = 0;
         ECOnComboEnd.Invoke();
-        ECOnScoreTotalChange.Invoke(TotalScore);   
+        ECOnScoreTotalChange.Invoke(TotalScore);
         if (bIsFinalCombo)
         {
             ECOnFinalScore.Invoke(TotalScore);
@@ -102,7 +105,8 @@ public class ScoreManager : MonoBehaviour
         if (CurrentComboTime > 0)
         {
             bIsFinalCombo = true;
-        }else
+        }
+        else
         {
             ECOnFinalScore.Invoke(TotalScore);
         }

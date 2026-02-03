@@ -1,4 +1,5 @@
 using Sortify;
+using System.Collections.Generic;
 using UnityEngine;
 using Utilities;
 
@@ -6,7 +7,7 @@ using Utilities;
 public class LevelSetManager : MonoBehaviour
 {
     [Header("Variables")]
-    [SerializeField] private LevelSet[] LevelSets;
+    [SerializeField] private LevelSetSO[] LevelSets;
 
     [BetterHeader("Broadcast On")]
     public IntEventChannelSO ECOnSetIndexOffset = null;
@@ -73,4 +74,22 @@ public class LevelSetManager : MonoBehaviour
         }
         return LevelSets[CurrentLevelSetIndex].ShopPrefab;
     }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        HashSet<int> CheckUnique = new();
+        foreach (var levelSet in LevelSets)
+        {
+            if (!CheckUnique.Contains(levelSet.GetID()))
+            {
+                CheckUnique.Add(levelSet.GetID());
+            }
+            else
+            {
+                Debug.LogError("Duplicate ID in " + levelSet.GetSetName());
+            }
+        }
+    }
+#endif
 }
