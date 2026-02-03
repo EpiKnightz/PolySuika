@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Utilities
 {
@@ -39,7 +40,7 @@ namespace Utilities
         {
                 {0, "001FFF" },
                 {1, "44A8A8" },
-                {2, "55D25A" },
+                {2, "35C13A" },
                 {3, "AEB000" },
                 {4, "CD6A29" },
                 {5, "FF4040" },
@@ -51,7 +52,7 @@ namespace Utilities
         {
                 { ScoreMilestone.NICE, "001FFF" },
                 { ScoreMilestone.GOOD, "44A8A8" },
-                { ScoreMilestone.GREAT, "55D25A" },
+                { ScoreMilestone.GREAT, "35C13A" },
                 { ScoreMilestone.SUPER, "AEB000" },
                 { ScoreMilestone.UNREAL, "CD6A29" },
                 { ScoreMilestone.INSANE, "FF4040" },
@@ -96,6 +97,40 @@ namespace Utilities
             return index >= collection.Count ? 0
                 : index < 0 ? collection.Count - 1
             : index;
+        }
+    }
+
+    public static class LayerMaskExtensions
+    {
+        public static bool HaveLayer(this LayerMask mask, GameObject obj) => (mask.value & (1 << obj.layer)) != 0;
+        public static bool HaveLayer(this LayerMask mask, int layer) => (mask.value & (1 << layer)) != 0;
+    }
+
+    public static class Vector3Extensions
+    {
+        public static Vector2 xy(this Vector3 aVector)
+        {
+            return new Vector2(aVector.x, aVector.y);
+        }
+        public static Vector2 xz(this Vector3 aVector)
+        {
+            return new Vector2(aVector.x, aVector.z);
+        }
+        public static Vector2 yz(this Vector3 aVector)
+        {
+            return new Vector2(aVector.y, aVector.z);
+        }
+        public static Vector2 yx(this Vector3 aVector)
+        {
+            return new Vector2(aVector.y, aVector.x);
+        }
+        public static Vector2 zx(this Vector3 aVector)
+        {
+            return new Vector2(aVector.z, aVector.x);
+        }
+        public static Vector2 zy(this Vector3 aVector)
+        {
+            return new Vector2(aVector.z, aVector.y);
         }
     }
 }
