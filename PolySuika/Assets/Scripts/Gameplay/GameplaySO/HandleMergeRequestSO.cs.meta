@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: 061f16f30bf1ae44b82b8d4c27b9ffc1
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - ECOnMergeEvent: {fileID: 11400000, guid: 2358d6d4659c78146a4ed0748f8f1d81, type: 2}
+  - ECOnMergePosition: {fileID: 11400000, guid: 297dbac9c65d8af4a82704a1b40b5be9, type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
