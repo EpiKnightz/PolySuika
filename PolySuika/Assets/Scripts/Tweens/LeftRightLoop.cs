@@ -8,10 +8,18 @@ public class LeftRightLoop : MonoBehaviour
     public float Duration = 2f;
     public float EndDelay = 0f;
 
+    // Privates
+    protected Tween ObjectTween;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    private void Start()
+    protected virtual void Start()
     {
-        Tween.LocalPositionX(transform, Endpoint, Duration, cycles: -1, cycleMode: CycleMode.Yoyo, ease: Ease.InOutSine,
-            endDelay: EndDelay);
+        Animate();
+    }
+
+    protected virtual void Animate()
+    {
+        ObjectTween = Tween.LocalPositionX(transform, Endpoint, Duration, cycles: -1, cycleMode: CycleMode.Yoyo, ease: Ease.InOutSine,
+                                endDelay: EndDelay);
     }
 }
