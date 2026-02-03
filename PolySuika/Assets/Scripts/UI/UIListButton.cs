@@ -1,16 +1,19 @@
 using PrimeTween;
 using UnityEngine;
 
+[RequireComponent(typeof(RectTransform))]
 public class UIListButton : UIToggle
 {
     [Header("References")]
     public RectTransform ListButton;
     public RectTransform[] ListItems;
-    //public RectTransform HomeButton;
+
+    [Header("Variables")]
+    public float AnimDuration = 0.25f;
 
     [Header("Listen To")]
     public VoidEventChannelSO[] ECOnTriggerHideList;
-    public IntEventChannelSO ECOnTriggerShowList;
+    public VoidEventChannelSO[] ECOnTriggerShowList;
 
     // Privates
     private Vector3[] DesiredItemsPos;
@@ -27,13 +30,21 @@ public class UIListButton : UIToggle
         }
     }
 
+    private void Start()
+    {
+        DisableButtons();
+    }
+
     private void OnEnable()
     {
         for (int i = 0; i < ECOnTriggerHideList.Length; i++)
         {
             ECOnTriggerHideList[i].Sub(HideList);
         }
-        ECOnTriggerShowList.Sub(OnFinalScore);
+        for (int i = 0; i < ECOnTriggerShowList.Length; i++)
+        {
+            ECOnTriggerShowList[i].Sub(ShowList);
+        }
     }
 
     private void OnDisable()
@@ -42,7 +53,10 @@ public class UIListButton : UIToggle
         {
             ECOnTriggerHideList[i].Unsub(HideList);
         }
-        ECOnTriggerShowList.Unsub(OnFinalScore);
+        for (int i = 0; i < ECOnTriggerShowList.Length; i++)
+        {
+            ECOnTriggerShowList[i].Unsub(ShowList);
+        }
     }
 
     private void HideList()
@@ -53,7 +67,7 @@ public class UIListButton : UIToggle
         }
     }
 
-    private void OnFinalScore(int Score)
+    private void ShowList()
     {
         if (!UIStateEnable)
         {
@@ -66,7 +80,8 @@ public class UIListButton : UIToggle
         // Show buttons
         for (int i = 0; i < ListItems.Length; i++)
         {
-            Tween.LocalPosition(ListItems[i], ListButton.localPosition + DesiredItemsPos[i], 0.25f, ease: Ease.InOutSine);
+            EnableButtons(i, true);
+            Tween.LocalPosition(ListItems[i], ListButton.localPosition + DesiredItemsPos[i], AnimDuration, ease: Ease.InOutSine);
         }
     }
 
@@ -75,7 +90,31 @@ public class UIListButton : UIToggle
         // Hide buttons
         for (int i = 0; i < ListItems.Length; i++)
         {
-            Tween.LocalPosition(ListItems[i], ListButton.localPosition, 0.25f, ease: Ease.InOutSine);
+            Tween.LocalPosition(ListItems[i], ListButton.localPosition, AnimDuration, ease: Ease.InOutSine);
+        }
+        Tween.Delay(AnimDuration, DisableButtons);
+    }
+
+    private void DisableButtons()
+    {
+        for (int i = 0; i < ListItems.Length; i++)
+        {
+            EnableButtons(i, false);
         }
     }
+
+    private void EnableButtons(int idx, bool isEnable)
+    {
+        ListItems[idx].gameObject.SetActive(isEnable);
+    }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (ListButton == null)
+        {
+            ListButton = GetComponent<RectTransform>();
+        }
+    }
+#endif
 }
