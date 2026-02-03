@@ -7,6 +7,7 @@ public class LeaderboardManager : MonoBehaviour, ILeaderboardManager, IInstaller
 {
     // Dependencies
     [Inject] private readonly ISaveManager SaveManager;
+    [Inject] private readonly IPref PrefManager;
 
     // Events Channels
     [BetterHeader("Broadcast On")]
@@ -14,11 +15,15 @@ public class LeaderboardManager : MonoBehaviour, ILeaderboardManager, IInstaller
 
     [BetterHeader("Listen To")]
     public VoidEventChannelSO ECOnResetLeaderboardTriggered;
-    public VoidEventChannelSO ECOnLeaderboardButtonTriggered;
+    public VoidEventChannelSO[] ECOnNeedUpdateLeaderboardEvent;
+    public GameModeEventChannelSO ECOnCurrentModeChange;
+    public LevelSetEventChannelSO ECOnLevelSetChange;
 
     // Private
     private Leaderboard CurrentLeaderboard;
     private bool IsUpdated = true;
+    private int ModeID = -1;
+    private int SetID = -1;
 
     public void InstallBindings(ContainerBuilder builder)
     {
@@ -28,39 +33,58 @@ public class LeaderboardManager : MonoBehaviour, ILeaderboardManager, IInstaller
     private void OnEnable()
     {
         ECOnResetLeaderboardTriggered.Sub(ResetLeaderboard);
-        ECOnLeaderboardButtonTriggered.Sub(UpdateLeaderboardFromDisk);
+        for (int i = 0; i < ECOnNeedUpdateLeaderboardEvent.Length; i++)
+        {
+            ECOnNeedUpdateLeaderboardEvent[i].Sub(UpdateLeaderboardFromDisk);
+        }
+        ECOnCurrentModeChange.Sub(UpdateModeInfo);
+        ECOnLevelSetChange.Sub(UpdateSetInfo);
     }
 
     private void OnDisable()
     {
         ECOnResetLeaderboardTriggered.Unsub(ResetLeaderboard);
-        ECOnLeaderboardButtonTriggered.Unsub(UpdateLeaderboardFromDisk);
+        for (int i = 0; i < ECOnNeedUpdateLeaderboardEvent.Length; i++)
+        {
+            ECOnNeedUpdateLeaderboardEvent[i].Unsub(UpdateLeaderboardFromDisk);
+        }
+        ECOnCurrentModeChange.Unsub(UpdateModeInfo);
+        ECOnLevelSetChange.Unsub(UpdateSetInfo);
     }
 
     private void Start()
     {
+        BackwardCompatibleHandle();
         UpdateLeaderboardFromDisk();
     }
 
-    public void UpdateLeaderboardFromDisk()
+    private void UpdateModeInfo(GameModeSO modeSO)
+    {
+        ModeID = modeSO.GetID();
+        IsUpdated = true;
+    }
+
+    private void UpdateSetInfo(LevelSetSO setSO)
+    {
+        SetID = setSO.GetID();
+        IsUpdated = true;
+    }
+
+    private void UpdateLeaderboardFromDisk()
     {
         if (IsUpdated)
         {
-            CurrentLeaderboard = SaveManager.Load<Leaderboard>();
-            if (CurrentLeaderboard != null)
-            {
-                ECOnLeaderboardUpdated.Invoke(CurrentLeaderboard);
-            }
-            else
+            if (!HandleLoad())
             {
                 CurrentLeaderboard = new Leaderboard();
-                SaveManager.Save(CurrentLeaderboard);
+                //HandleSave();
             }
+            ECOnLeaderboardUpdated.Invoke(CurrentLeaderboard);
             IsUpdated = false;
         }
     }
 
-    public bool CheckLeaderboardEligable(int score)
+    public bool CheckLeaderboardEligible(int score)
     {
         return CurrentLeaderboard.CompareLast(score);
     }
@@ -74,15 +98,53 @@ public class LeaderboardManager : MonoBehaviour, ILeaderboardManager, IInstaller
     public void ResetLeaderboard()
     {
         CurrentLeaderboard.Clear();
-        SaveNewLeaderboard();
+        SaveNewLeaderboard(true);
     }
 
-    private void SaveNewLeaderboard()
+    private void SaveNewLeaderboard(bool isForce = false)
     {
-        SaveManager.Save(CurrentLeaderboard);
+        if (isForce
+            || CurrentLeaderboard.entries.Count > 0)
+        {
+            HandleSave();
+        }
         ECOnLeaderboardUpdated.Invoke(CurrentLeaderboard);
         IsUpdated = true;
     }
 
-    public Leaderboard GetCurrentLeaderboard() { return CurrentLeaderboard; }
+    private bool HandleLoad()
+    {
+        string suffix = HandleSuffix();
+        return SaveManager.TryLoad(out CurrentLeaderboard, suffix);
+    }
+
+    private void BackwardCompatibleHandle()
+    {
+        string BackwardKey = "Backwardv15";
+        if (!PrefManager.HasKey(BackwardKey))
+        {
+            if (SaveManager.TryLoad(out CurrentLeaderboard))
+            {
+                if (!HandleSave())
+                {
+                    return;
+                }
+            }
+            PrefManager.SaveInt(BackwardKey, 1);
+        }
+    }
+
+    private bool HandleSave()
+    {
+        string suffix = HandleSuffix();
+        return SaveManager.Save(CurrentLeaderboard, suffix);
+    }
+
+    private string HandleSuffix()
+    {
+        return ModeID != -1
+            && SetID != -1
+            ? "_" + ModeID.ToString() + "_" + SetID.ToString()
+            : "";
+    }
 }

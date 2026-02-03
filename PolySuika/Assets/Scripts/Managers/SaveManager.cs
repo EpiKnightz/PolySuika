@@ -1,39 +1,73 @@
-﻿using System.IO;
+﻿using Reflex.Core;
+using System;
+using System.IO;
 using UnityEngine;
-using Reflex.Core;
 
-public class SaveManager : MonoBehaviour, ISaveManager, IInstaller
+public class SaveManager : MonoBehaviour, ISaveManager, IInstaller, IPref
 {
     [SerializeField] private bool BeautifyJson = true;
 
     public void InstallBindings(ContainerBuilder builder)
     {
         builder.AddSingleton(this, typeof(ISaveManager));
+        builder.AddSingleton(this, typeof(IPref));
     }
 
-    public void Save<T>(T data)
+    public bool Save<T>(T data, string suffix = "")
     {
-        string json = JsonUtility.ToJson(data, BeautifyJson);
-        string path = Path.Join(Application.persistentDataPath, $"{typeof(T).Name}.ini");
-        var streamWriter = new StreamWriter(path);
-        streamWriter.Write(json);
-        streamWriter.Close();
+        try
+        {
+            string json = JsonUtility.ToJson(data, BeautifyJson);
+            string path = Path.Join(Application.persistentDataPath, $"{typeof(T).Name}" + suffix + ".ini");
+            var streamWriter = new StreamWriter(path);
+            streamWriter.Write(json);
+            streamWriter.Close();
+            return true;
+        }
+        catch (Exception e)
+        {
+#if UNITY_EDITOR
+            Debug.LogWarning(e);
+#endif
+            return false;
+        }
     }
 
-    public T Load<T>()
+    public bool TryLoad<T>(out T result, string suffix = "")
     {
-        string path = Path.Join(Application.persistentDataPath, $"{typeof(T).Name}.ini");
+        string path = Path.Join(Application.persistentDataPath, $"{typeof(T).Name}" + suffix + ".ini");
         try
         {
             var streamReader = new StreamReader(path);
             string json = streamReader.ReadToEnd();
             streamReader.Close();
-            return JsonUtility.FromJson<T>(json);
+            result = JsonUtility.FromJson<T>(json);
+            return true;
         }
-        catch (FileNotFoundException e)
+        catch (Exception e)
         {
-            Debug.LogError(e);
-            return default;
+#if UNITY_EDITOR
+            Debug.LogWarning(e);
+#endif
+            result = default;
+            return false;
         }
+    }
+
+    public bool HasKey(string key)
+    {
+        return PlayerPrefs.HasKey(key);
+    }
+
+    public int GetInt(string key)
+    {
+        return PlayerPrefs.GetInt(key);
+    }
+
+    public void SaveInt(string key, int value)
+    {
+        PlayerPrefs.SetInt(key, value);
+        PlayerPrefs.Save();
+
     }
 }
