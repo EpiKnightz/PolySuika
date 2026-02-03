@@ -21,13 +21,13 @@ public class UIChangeImageOnEvent : MonoBehaviour
     // Privates
     private float CurrentAnimY;
 
-    private void OnEnable()
+    private void Awake()
     {
         ECOnCurrentModeChange.Sub(OnModeChange);
         ECOnGameModeIndexOffset.Sub(OnChangeModeOffset);
     }
 
-    private void OnDisable()
+    private void OnDestroy()
     {
         ECOnCurrentModeChange.Unsub(OnModeChange);
         ECOnGameModeIndexOffset.Unsub(OnChangeModeOffset);
@@ -40,18 +40,24 @@ public class UIChangeImageOnEvent : MonoBehaviour
 
     private void OnModeChange(GameModeSO newMode)
     {
-        OldImage.sprite = TargetImage.sprite;
-        TargetImage.sprite = newMode.GetIcon();
-        OldImage.gameObject.SetActive(true);
-        OldImage.transform.localPosition = new Vector3(TargetImage.transform.localPosition.x,
-                                                       0,
-                                                       TargetImage.transform.localPosition.z);
-        TargetImage.transform.localPosition = new Vector3(TargetImage.transform.localPosition.x,
+        if (AnimDuration > 0)
+        {
+            OldImage.sprite = TargetImage.sprite;
+            TargetImage.transform.localPosition = new Vector3(TargetImage.transform.localPosition.x,
                                                             -CurrentAnimY,
                                                             TargetImage.transform.localPosition.z);
-        Tween.LocalPositionY(OldImage.transform, CurrentAnimY, AnimDuration, Ease.OutBack);
-        Tween.LocalPositionY(TargetImage.transform, 0, AnimDuration, Ease.OutBack);
-        Tween.Delay(AnimDuration, DeactiveOldImage);
+        }
+        TargetImage.sprite = newMode.GetIcon();
+        if (CurrentAnimY != 0)
+        {
+            OldImage.gameObject.SetActive(true);
+            OldImage.transform.localPosition = new Vector3(TargetImage.transform.localPosition.x,
+                                               0,
+                                               TargetImage.transform.localPosition.z);
+            Tween.LocalPositionY(OldImage.transform, CurrentAnimY, AnimDuration, Ease.OutBack);
+            Tween.LocalPositionY(TargetImage.transform, 0, AnimDuration, Ease.OutBack);
+            Tween.Delay(AnimDuration, DeactiveOldImage);
+        }
     }
 
     private void DeactiveOldImage()
