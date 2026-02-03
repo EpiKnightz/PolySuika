@@ -1,5 +1,6 @@
 using Lean.Pool;
 using Sortify;
+using System.Collections.Generic;
 using UnityEngine;
 using Utilities;
 
@@ -36,13 +37,25 @@ public class GameModeManager : MonoBehaviour
         ECOnActionButtonTriggered.Unsub(SpawnCheck);
     }
 
+    private void Start()
+    {
+        OffsetCurrentGameMode(0);
+    }
+
     private void SpawnCheck()
     {
+        GameObject checkPrefab = GameModeList[CurrentGameModeIndex].GetCheckPrefab();
         if (CurrentCheck != null)
         {
-            LeanPool.Despawn(CurrentCheck);
+            if (CurrentCheck.name == checkPrefab.name)
+            {
+                return;
+            }
+            else
+            {
+                LeanPool.Despawn(CurrentCheck);
+            }
         }
-        GameObject checkPrefab = GameModeList[CurrentGameModeIndex].GetCheckPrefab();
         CurrentCheck = LeanPool.Spawn(checkPrefab, checkPrefab.transform.position + OffsetableTransform.position, Quaternion.identity, OffsetableTransform); // So it would spawn at local
     }
 
@@ -53,4 +66,22 @@ public class GameModeManager : MonoBehaviour
         ECOnCurrentModeChange.Invoke(GameModeList[CurrentGameModeIndex]);
         ECOnRestartTriggered.Invoke();
     }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        HashSet<int> CheckUnique = new();
+        foreach (var gameMode in GameModeList)
+        {
+            if (!CheckUnique.Contains(gameMode.GetID()))
+            {
+                CheckUnique.Add(gameMode.GetID());
+            }
+            else
+            {
+                Debug.LogError("Duplicate ID in " + gameMode.name);
+            }
+        }
+    }
+#endif
 }

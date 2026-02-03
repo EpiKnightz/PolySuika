@@ -40,7 +40,7 @@ public class BGShopManager : MonoBehaviour
     }
 
 
-    private void ChangeBackgroundShop(LevelSet setData)
+    private void ChangeBackgroundShop(LevelSetSO setData)
     {
         if (CurrentBGShop != null)
         {
