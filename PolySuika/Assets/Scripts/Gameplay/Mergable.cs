@@ -1,16 +1,20 @@
 using PrimeTween;
 using System;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Events;
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(Collider))]
 [RequireComponent(typeof(Renderer))]
+[RequireComponent(typeof(TrailRenderer))]
 public class Mergable : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private Rigidbody Rigidbody;
-    [SerializeField] private Collider Collider;
+    [SerializeField] private Collider[] ColliderList;
     [SerializeField] private Renderer Renderer;
+    [SerializeField] private TrailRenderer TrailRenderer;
 
     [Header("Variable")]
     [SerializeField] private string ImpactedTag;
@@ -26,6 +30,10 @@ public class Mergable : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
+        if (collision.gameObject == gameObject)
+        {
+            return;
+        }
         if (!isImpacted)
         {
             if (collision.gameObject.layer != LayerMask.NameToLayer("Ignore Raycast"))
@@ -54,15 +62,27 @@ public class Mergable : MonoBehaviour
     public void EnablePhysic(bool isEnable)
     {
         Rigidbody.isKinematic = !isEnable;
-        Collider.enabled = isEnable;
+        foreach (var collider in ColliderList)
+        {
+            collider.enabled = isEnable;
+        }
     }
 
     public void EnableShadow(bool isEnable)
     {
         Renderer.receiveShadows = isEnable;
         Renderer.shadowCastingMode = isEnable ? UnityEngine.Rendering.ShadowCastingMode.On : UnityEngine.Rendering.ShadowCastingMode.Off;
+        TrailRenderer.enabled = isEnable;
+        if (!isEnable)
+        {
+            TrailRenderer.Clear();
+        }
     }
 
+    public void SetMergeRequestDelegate(UnityAction<Mergable, Mergable> dele)
+    {
+        DRequestMerging.Reg(dele);
+    }
     public void SetTier(int tier) { Tier = tier; }
     public int GetTier() { return Tier; }
     public void SetImpacted(bool imp)
@@ -119,10 +139,20 @@ public class Mergable : MonoBehaviour
     {
         if (Rigidbody == null)
             Rigidbody = GetComponent<Rigidbody>();
-        if (Collider == null)
-            Collider = GetComponent<Collider>();
+        if (ColliderList == null || ColliderList.Length == 0)
+            ColliderList = GetComponents<Collider>();
         if (Renderer == null)
             Renderer = GetComponent<Renderer>();
+        if (TrailRenderer == null)
+        {
+            TrailRenderer = GetComponent<TrailRenderer>();
+            if (TrailRenderer.startColor == Color.white.WithAlpha(0)
+                && TrailRenderer.endColor == Color.white.WithAlpha(0))
+            {
+                TrailRenderer.startColor = Renderer.sharedMaterial.color.WithAlpha(0);
+                TrailRenderer.endColor = Renderer.sharedMaterial.color.WithAlpha(0);
+            }
+        }
         ImpactedTag ??= "Impacted";
     }
 #endif
