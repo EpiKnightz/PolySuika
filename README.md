@@ -33,10 +33,10 @@
 Note: Due to licensing, no assets are committed. This is code only.
 
 ## :tv: Trailer <a name = "video"></a>
-(https://www.youtube.com/watch?v=KhOjNCvz72E)
+[![](https://img.youtube.com/vi/KhOjNCvz72E/0.jpg)](https://www.youtube.com/watch?v=KhOjNCvz72E)
 
-## :video_game: APK Demo: <a name = "apk"></a>
-(https://epiknightz.itch.io/poly-suika)
+## :video_game: APK Download: <a name = "apk"></a>
+https://epiknightz.itch.io/poly-suika
 
 
 ## ⛏️ Tools <a name = "built_using"></a>
