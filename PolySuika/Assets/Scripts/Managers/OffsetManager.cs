@@ -44,11 +44,11 @@ public class OffsetManager : MonoBehaviour
         if (offsetY > 0)
         {
             //WorldOffsetY = offsetY;
-            float WorldOffsetY = transform.position.y + offsetY;
+            float worldOffsetY = transform.position.y + offsetY;
             float speedMulti = Mathf.Clamp(Mathf.Pow(SpeedFactor, Mathf.FloorToInt(offsetY * SpeedPower)), MinSpeedMulti, MaxSpeedMulti);
             float duration = offsetY / (OffsetSpeed * speedMulti);
             //Debug.Log("OffsetManager: Setting World Offset Y to " + offsetY + " over duration " + duration + " with speed factor " + speedMulti);
-            Tween.PositionY(transform, WorldOffsetY, duration, ease: Ease.InOutSine).OnUpdate(target: this, (target, tween) => target.InvokeOffsetEvent());
+            Tween.PositionY(transform, worldOffsetY, duration, ease: Ease.InOutSine).OnUpdate(target: this, (target, tween) => target.InvokeOffsetEvent());
         }
     }
 
