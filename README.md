@@ -43,9 +43,10 @@ Note: Due to licensing, no assets are committed. This is code only.
 - Unity 6.2 - Engine
 - FMOD - Audio SDK
 - Paint.NET - Texture/2D editor
+- Unreal - 3D editor
 - [OpenGameArt](opengameart.org) - Icons & Music
 - [Freepik](http://www.freepik.com) - Icons
-- [CreativeFabrica](https://www.creativefabrica.com/) Font
+- [CreativeFabrica](https://www.creativefabrica.com/) Font for publishing side
 
 ## ✍️ Authors <a name = "authors"></a>
 - [@EpiKnightz](https://github.com/EpiKnightz) - Game Design, Programming, Assetting
