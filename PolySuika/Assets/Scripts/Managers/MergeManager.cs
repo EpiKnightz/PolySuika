@@ -8,7 +8,7 @@ using UnityEngine;
 using Utilities;
 using Random = UnityEngine.Random;
 
-public class TierManager : MonoBehaviour, IInstaller, IMergeHandler, ICooldown, IScaleIncrement
+public class MergeManager : MonoBehaviour, IInstaller, IMergeHandler, ICooldown, IScaleIncrement
 {
     [BetterHeader("Spawn Settings")]
     [SerializeField] private int MaxSpawnableTier = 2;
